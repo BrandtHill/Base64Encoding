@@ -69,17 +69,6 @@ public class Base64Encoding {
 			chunkOut[1] = (char)(0xF0 & (getIndexOf(chunkIn[1])<<4) | 0x0F & (getIndexOf(chunkIn[2])>>>2));
 			chunkOut[2] = (char)(0xC0 & (getIndexOf(chunkIn[2])<<6) | 0x3F & (getIndexOf(chunkIn[3])));
 			buffer.append(chunkOut);			
-			
-			int a0 = chunkIn[1];
-			int a1 = a0 & 0x0F;
-			int a2 = a1<<4;
-			int a3 = getIndexOf((char)a2);
-			int a4 = (char)a3;
-			int b0 = chunkIn[2];
-			int b1 = getIndexOf((char)b0);
-			int b2 = b1>>>2;
-			int c0 = a4 | b2;
-			
 		}
 		
 		encData.getChars(encLen - 4, encLen, chunkIn, 0);
