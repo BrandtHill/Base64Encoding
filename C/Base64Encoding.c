@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <time.h>
 
 #define TABLELEN 64
+#define INT32_MIN (-2147483647 - 1)
 
 char* encode(char*);
 char* decode(char*);
@@ -38,8 +38,8 @@ char* encode(char* data) {
     char* buffer = malloc(encLen);
     char chunkOut[4] = "";
     char chunkIn[3] = "";
-    
-    for(int i = 0; i < (datLen - remainder); i += 3) {
+    int i;
+    for(i = 0; i < (datLen - remainder); i += 3) {
         strncpy(chunkIn, data + i, 3);
         chunkOut[0] = indexTable[  chunkIn[0]>>2 ];
         chunkOut[1] = indexTable[ (chunkIn[0] & 0x03)<<4 | chunkIn[1]>>4 ];
@@ -70,8 +70,10 @@ char* decode(char* encData) {
     int encLen = strlen(encData);
     int decLen;
     int remainder;
+    int i;
     char chunkIn[4] = "";
     char chunkOut[3] = "";
+    char* buffer;
     
     remainder = 0;
     if(encData[encLen - 1] == '=') {
@@ -80,11 +82,11 @@ char* decode(char* encData) {
             remainder = 1;
         }
     }
+
     decLen = ((encLen * 3) / 4) - (remainder > 0 ? (remainder == 2 ? 1 : 2) : 0);
+    buffer = malloc(decLen);
     
-    char* buffer = malloc(decLen);
-    
-    for(int i = 0; i < (encLen - 4); i += 4) {
+    for(i = 0; i < (encLen - 4); i += 4) {
         strncpy(chunkIn, encData + i, 4);
         chunkOut[0] = (char)((getIndexOf(chunkIn[0])<<2) | (getIndexOf(chunkIn[1])>>4));
         chunkOut[1] = (char)(0xF0 & (getIndexOf(chunkIn[1])<<4) | 0x0F & (getIndexOf(chunkIn[2])>>2));
@@ -116,7 +118,8 @@ char* decode(char* encData) {
 }
 
 int getIndexOf(char c) {
-    for(int i = 0; i < TABLELEN; i++) {
+    int i;
+    for(i = 0; i < TABLELEN; i++) {
         if(indexTable[i] == c)
             return i;
     }
