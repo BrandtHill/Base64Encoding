@@ -3,7 +3,11 @@ public class Base64Encoding {
 	static char[] indexTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
 
 	public static void main(String[] args) throws InterruptedException {
-		System.out.println(encode("AAAAAA"));
+		System.out.println(encode("AAAAAAAAAAAA"));
+		System.out.println(decode(encode("123")));
+		System.out.println(decode(encode("1234")));
+		System.out.println(decode(encode("12345")));
+		System.out.println(decode(encode("123456")));
 		System.out.println(decode("QUJDYWJjMTIzWFlaeHl6"));
 		System.out.println(decode(encode("This is a string that will be encoded and then decoded. "
 				+ "If you can read this, my hand crafted algorithm is working swimingly... "
@@ -53,13 +57,13 @@ public class Base64Encoding {
 		char[] chunkOut = new char[3];
 		
 		remainder = 0;
-		if(encData.substring(encLen-1).equals("=")) {
+		if(encData.charAt(encLen-1) == '=') {
 			remainder = 2;
-			if(encData.substring(encLen-2).equals("==")) {
+			if(encData.charAt(encLen-2) == '=') {
 				remainder = 1;
 			}
 		}
-		decLen = ((encLen * 3) / 4) - remainder;
+		decLen = ((encLen * 3) / 4) - (remainder > 0 ? (remainder == 2 ? 1 : 2) : 0);
 		
 		StringBuffer buffer = new StringBuffer(decLen);
 		
@@ -99,7 +103,7 @@ public class Base64Encoding {
 			if(indexTable[i] == c)
 				return i;
 		}
-		return -64;
+		return Integer.MIN_VALUE;
 	}
 
 }

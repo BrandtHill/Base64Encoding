@@ -14,13 +14,21 @@ char* indexTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567
 
 int main(void) {
     char* str1 = "AAAAAAAAAAAA";
-    char* str2 = "QUJDYWJjMTIzWFlaeHl6";
-    char* str3 = "This is a string that will be encoded and then decoded. \
+    char* str2 = "123";
+    char* str3 = "1234";
+    char* str4 = "12345";
+    char* str5 = "123456";
+    char* str6 = "QUJDYWJjMTIzWFlaeHl6";
+    char* str7 = "This is a string that will be encoded and then decoded. \
             If you can read this, my hand crafted algorithm is working swimingly... \
             Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~~";
     printf("%s\n", encode(str1));
-    printf("%s\n", decode(str2));
+    printf("%s\n", decode(encode(str2)));
     printf("%s\n", decode(encode(str3)));
+    printf("%s\n", decode(encode(str4)));
+    printf("%s\n", decode(encode(str5)));
+    printf("%s\n", decode(str6));
+    printf("%s\n", decode(encode(str7)));
 }
 
 char* encode(char* data) {
@@ -72,7 +80,7 @@ char* decode(char* encData) {
             remainder = 1;
         }
     }
-    decLen = ((encLen * 3) / 4) - remainder;
+    decLen = ((encLen * 3) / 4) - (remainder > 0 ? (remainder == 2 ? 1 : 2) : 0);
     
     char* buffer = malloc(decLen);
     
@@ -112,5 +120,5 @@ int getIndexOf(char c) {
         if(indexTable[i] == c)
             return i;
     }
-    return -64;
+    return INT32_MIN;
 }
