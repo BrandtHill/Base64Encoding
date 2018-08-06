@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/time.h>
 
 #define TABLELEN 64
 #define INT32_MIN (-2147483647 - 1)
@@ -12,23 +13,37 @@ int getIndexOf(char);
 
 char* indexTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
+static char* largeData = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mi purus,\
+mollis et pulvinar quis, elementum non felis. Ut bibendum dolor ut mauris tempus, euismod\
+ultricies odio vulputate. Nunc finibus elit non venenatis maximus. Maecenas in mollis ipsum,\
+mattis laoreet purus. Sed lacus purus, tempus vel elementum sed, rutrum nec massa. Mauris\
+mattis libero vitae nunc tempor, eget posuere ipsum molestie. Curabitur semper tempus diam.\
+Morbi rutrum sollicitudin augue, rhoncus viverra velit volutpat vitae.\r\n";
+
 int main(void) {
-    char* str1 = "AAAAAAAAAAAA";
-    char* str2 = "123";
-    char* str3 = "1234";
-    char* str4 = "12345";
-    char* str5 = "123456";
-    char* str6 = "QUJDYWJjMTIzWFlaeHl6";
-    char* str7 = "This is a string that will be encoded and then decoded. \
-            If you can read this, my hand crafted algorithm is working swimingly... \
-            Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~~";
-    printf("%s\n", encode(str1));
-    printf("%s\n", decode(encode(str2)));
-    printf("%s\n", decode(encode(str3)));
-    printf("%s\n", decode(encode(str4)));
-    printf("%s\n", decode(encode(str5)));
-    printf("%s\n", decode(str6));
-    printf("%s\n", decode(encode(str7)));
+    struct timeval timeStart, timeStop;
+    long i;
+    char* largeTest;
+
+    printf("%s\n", encode("AAAAAAAAAAAA"));
+    printf("%s\n", decode(encode("123")));
+    printf("%s\n", decode(encode("1234")));
+    printf("%s\n", decode(encode("12345")));
+    printf("%s\n", decode(encode("123456")));
+    printf("%s\n", decode("QUJDYWJjMTIzWFlaeHl6"));
+    printf("%s\n", decode(encode("This is a string that will be encoded and then decoded.\n
+If you can read this, my hand crafted algorithm is working swimingly...\n
+Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~~")));
+
+    gettimeofday(&timeStart, NULL);
+    for(i = 0; i<1000000; i++){
+        largeTest = decode(encode(largeData));
+        //Need to solve this memory leak
+    }
+    gettimeofday(&timeStop, NULL);
+    printf("%s\n", largeTest);
+    printf("Total time in seconds: %lf", (timeStop.tv_sec - timeStart.tv_sec) + (timeStop.tv_usec - timeStart.tv_usec)/1000000.0);
+
 }
 
 char* encode(char* data) {

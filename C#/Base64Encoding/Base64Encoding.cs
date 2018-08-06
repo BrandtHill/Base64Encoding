@@ -3,12 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Base64Encoding
 {
     class Base64Encoding
     {
         static char[] indexTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".ToCharArray();
+
+        static string largeData = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mi purus,\n"
+        + "mollis et pulvinar quis, elementum non felis. Ut bibendum dolor ut mauris tempus, euismod\n"
+        + "ultricies odio vulputate. Nunc finibus elit non venenatis maximus. Maecenas in mollis ipsum,\n"
+        + "mattis laoreet purus. Sed lacus purus, tempus vel elementum sed, rutrum nec massa. Mauris\n"
+        + "mattis libero vitae nunc tempor, eget posuere ipsum molestie. Curabitur semper tempus diam.\n"
+        + "Morbi rutrum sollicitudin augue, rhoncus viverra velit volutpat vitae.\r\n";
 
         static void Main(string[] args)
         {
@@ -21,6 +29,18 @@ namespace Base64Encoding
             Console.WriteLine(Decode(Encode("This is a string that will be encoded and then decoded.\n"
                     + "If you can read this, my hand crafted algorithm is working swimingly...\n"
                     + "Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~~")));
+
+            Stopwatch sw = new Stopwatch();
+            string largeTest = null;
+            sw.Start();
+            for(int i = 0; i < 1000000; i++)
+            {
+                largeTest = Decode(Encode(largeData));
+            }
+            sw.Stop();
+            Console.Write(largeTest);
+            Console.WriteLine("Total time in seconds: " + sw.Elapsed.TotalSeconds);
+
             Console.Read();
         }
 

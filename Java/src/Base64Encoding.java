@@ -2,7 +2,14 @@ public class Base64Encoding {
 
 	static char[] indexTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
 
-	public static void main(String[] args) throws InterruptedException {
+	static String largeData = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mi purus,\n"
+			+ "mollis et pulvinar quis, elementum non felis. Ut bibendum dolor ut mauris tempus, euismod\n"
+			+ "ultricies odio vulputate. Nunc finibus elit non venenatis maximus. Maecenas in mollis ipsum,\n"
+			+ "mattis laoreet purus. Sed lacus purus, tempus vel elementum sed, rutrum nec massa. Mauris\n"
+			+ "mattis libero vitae nunc tempor, eget posuere ipsum molestie. Curabitur semper tempus diam.\n"
+			+ "Morbi rutrum sollicitudin augue, rhoncus viverra velit volutpat vitae.\r\n";
+	
+	public static void main(String[] args) {		
 		System.out.println(encode("AAAAAAAAAAAA"));
 		System.out.println(decode(encode("123")));
 		System.out.println(decode(encode("1234")));
@@ -12,6 +19,20 @@ public class Base64Encoding {
 		System.out.println(decode(encode("This is a string that will be encoded and then decoded. "
 				+ "If you can read this, my hand crafted algorithm is working swimingly... "
 				+ "Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~~")));
+		
+		
+		long timeStart = System.nanoTime();
+		
+		String largeTest = null;
+		for (int i = 0; i < 1000000; i++) {
+			largeTest = decode(encode(largeData));
+		} 
+		
+		long timeEnd = System.nanoTime();
+		
+		System.out.println(largeTest);
+		
+		System.out.println("Total time in seconds: " + (timeEnd - timeStart)/1000000000.0);
 		
 	}
 	

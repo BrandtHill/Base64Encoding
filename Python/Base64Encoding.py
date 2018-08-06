@@ -1,4 +1,13 @@
+import time
+
 index_table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+largeData = """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mi purus,
+mollis et pulvinar quis, elementum non felis. Ut bibendum dolor ut mauris tempus, euismod
+ultricies odio vulputate. Nunc finibus elit non venenatis maximus. Maecenas in mollis ipsum,
+mattis laoreet purus. Sed lacus purus, tempus vel elementum sed, rutrum nec massa. Mauris
+mattis libero vitae nunc tempor, eget posuere ipsum molestie. Curabitur semper tempus diam.
+Morbi rutrum sollicitudin augue, rhoncus viverra velit volutpat vitae.\r\n"""
 
 def encode(data):
     data = bytes(data, 'UTF-8')
@@ -93,5 +102,13 @@ def main():
 If you can read this, my hand crafted algorithm is working swimingly...
 Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~~""")))
 
+    time_start = time.time()
+    for i in range(1000000):
+        largeTest = decode(encode(largeData))
+    time_stop = time.time()
+    
+    print(largeTest)
+    print("Total time in seconds: " + str(time_stop - time_start))
+    
 if __name__ == "__main__":
     main()
