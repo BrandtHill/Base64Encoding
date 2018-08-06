@@ -13,7 +13,7 @@ int getIndexOf(char);
 
 char* indexTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-static char* largeData = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mi purus,\
+char* largeData = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mi purus,\
 mollis et pulvinar quis, elementum non felis. Ut bibendum dolor ut mauris tempus, euismod\
 ultricies odio vulputate. Nunc finibus elit non venenatis maximus. Maecenas in mollis ipsum,\
 mattis laoreet purus. Sed lacus purus, tempus vel elementum sed, rutrum nec massa. Mauris\
@@ -23,7 +23,8 @@ Morbi rutrum sollicitudin augue, rhoncus viverra velit volutpat vitae.\r\n";
 int main(void) {
     struct timeval timeStart, timeStop;
     long i;
-    char* largeTest;
+    char* largeTest_enc;
+    char* largeTest_dec;
 
     printf("%s\n", encode("AAAAAAAAAAAA"));
     printf("%s\n", decode(encode("123")));
@@ -37,12 +38,17 @@ Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~
 
     gettimeofday(&timeStart, NULL);
     for(i = 0; i<1000000; i++){
-        largeTest = decode(encode(largeData));
-        //Need to solve this memory leak
+        largeTest_enc = (char*)encode(largeData);
+        largeTest_dec = (char*)decode(largeTest_enc);
+        free(largeTest_enc);
+        free(largeTest_dec);
     }
+    
     gettimeofday(&timeStop, NULL);
-    printf("%s\n", largeTest);
-    printf("Total time in seconds: %lf", (timeStop.tv_sec - timeStart.tv_sec) + (timeStop.tv_usec - timeStart.tv_usec)/1000000.0);
+    largeTest_enc = (char*)encode(largeData);
+    largeTest_dec = (char*)decode(largeTest_enc); 
+    printf("%s\n", largeTest_dec);
+    printf("Total time in seconds: %lf\n", (timeStop.tv_sec - timeStart.tv_sec) + (timeStop.tv_usec - timeStart.tv_usec)/1000000.0);
 
 }
 
