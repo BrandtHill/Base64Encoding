@@ -9,15 +9,18 @@
 
 char* encode(char*);
 char* decode(char*);
-int getIndexOf(char);
 
 char* indexTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+int   revTable[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,0,0,0,62,0,0,0,63,52,53,54,55,56,57,58,59,60,61,0,0,0,0,0,0,
+                    0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,0,0,0,0,0,
+                    0,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,0,0,0,0,0};
 
-char* largeData = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mi purus,\
-mollis et pulvinar quis, elementum non felis. Ut bibendum dolor ut mauris tempus, euismod\
-ultricies odio vulputate. Nunc finibus elit non venenatis maximus. Maecenas in mollis ipsum,\
-mattis laoreet purus. Sed lacus purus, tempus vel elementum sed, rutrum nec massa. Mauris\
-mattis libero vitae nunc tempor, eget posuere ipsum molestie. Curabitur semper tempus diam.\
+char* largeData = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mi purus, \
+mollis et pulvinar quis, elementum non felis. Ut bibendum dolor ut mauris tempus, euismod \
+ultricies odio vulputate. Nunc finibus elit non venenatis maximus. Maecenas in mollis ipsum, \
+mattis laoreet purus. Sed lacus purus, tempus vel elementum sed, rutrum nec massa. Mauris \
+mattis libero vitae nunc tempor, eget posuere ipsum molestie. Curabitur semper tempus diam. \
 Morbi rutrum sollicitudin augue, rhoncus viverra velit volutpat vitae.\r\n";
 
 int main(void) {
@@ -27,13 +30,15 @@ int main(void) {
     char* largeTest_dec;
 
     printf("%s\n", encode("AAAAAAAAAAAA"));
+    printf("%s\n", encode("AAAAAAAAAAAAA"));
+    printf("%s\n", encode("AAAAAAAAAAAAAA"));
     printf("%s\n", decode(encode("123")));
     printf("%s\n", decode(encode("1234")));
     printf("%s\n", decode(encode("12345")));
     printf("%s\n", decode(encode("123456")));
     printf("%s\n", decode("QUJDYWJjMTIzWFlaeHl6"));
-    printf("%s\n", decode(encode("This is a string that will be encoded and then decoded.\n
-If you can read this, my hand crafted algorithm is working swimingly...\n
+    printf("%s\n", decode(encode("This is a string that will be encoded and then decoded.\n\
+If you can read this, my hand crafted algorithm is working swimingly...\n\
 Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~~")));
 
     gettimeofday(&timeStart, NULL);
@@ -57,49 +62,43 @@ char* encode(char* data) {
     int remainder = datLen % 3;
     int encLen = (datLen / 3) * 4 + (remainder != 0 ? 4 : 0);
     char* buffer = malloc(encLen);
-    char chunkOut[4] = "";
-    char chunkIn[3] = "";
-    int i;
-    for(i = 0; i < (datLen - remainder); i += 3) {
-        strncpy(chunkIn, data + i, 3);
-        chunkOut[0] = indexTable[  chunkIn[0]>>2 ];
-        chunkOut[1] = indexTable[ (chunkIn[0] & 0x03)<<4 | chunkIn[1]>>4 ];
-        chunkOut[2] = indexTable[ (chunkIn[1] & 0x0F)<<2 | chunkIn[2]>>6 ];
-        chunkOut[3] = indexTable[  chunkIn[2] & 0x3F ];
-        strncpy(buffer + ((i/3)*4), chunkOut, 4);
+    int i,j;
+    for(i = j = 0; i < (datLen - remainder); i += 3, j += 4) {
+        buffer[j]   = indexTable[  data[i]>>2 ];
+        buffer[j+1] = indexTable[ (data[i]   & 0x03)<<4 | data[i+1]>>4 ];
+        buffer[j+2] = indexTable[ (data[i+1] & 0x0F)<<2 | data[i+2]>>6 ];
+        buffer[j+3] = indexTable[  data[i+2] & 0x3F ];
     }
     
     if(remainder > 0) 
     {
-        strncpy(chunkIn, data + (datLen - remainder), remainder);
-        strncpy(chunkOut, "====", 4);
-        chunkOut[0] = indexTable[  chunkIn[0]>>2 ];
+        i = datLen - remainder;
+        j = encLen - 4;
+        strncpy(buffer + j, "====", 4);
+        buffer[j] = indexTable[ data[i]>>2 ];
         if(remainder == 1) {
-            chunkOut[1] = indexTable[ (chunkIn[0] & 0x03)<<4 ];
+            buffer[j+1] = indexTable[ (data[i] & 0x03)<<4 ];
         }
         else if (remainder == 2) {
-            chunkOut[1] = indexTable[ (chunkIn[0] & 0x03)<<4 | chunkIn[1]>>4 ];
-            chunkOut[2] = indexTable[ (chunkIn[1] & 0x0F)<<2 ];
+            buffer[j+1] = indexTable[ (data[i] & 0x03)<<4 | data[i+1]>>4 ];
+            buffer[j+2] = indexTable[ (data[i+1] & 0x0F)<<2 ];
         }
-        strncpy(buffer + encLen - 4, chunkOut, 4);
     }
     
     return buffer;
 }
 
-char* decode(char* encData) {
-    int encLen = strlen(encData);
+char* decode(char* data) {
+    int encLen = strlen(data);
     int decLen;
     int remainder;
-    int i;
-    char chunkIn[4] = "";
-    char chunkOut[3] = "";
+    int i,j;
     char* buffer;
-    
+
     remainder = 0;
-    if(encData[encLen - 1] == '=') {
+    if (data[encLen - 1] == '=') {
         remainder = 2;
-        if(encData[encLen-2] == '=') {
+        if (data[encLen-2] == '=') {
             remainder = 1;
         }
     }
@@ -107,42 +106,27 @@ char* decode(char* encData) {
     decLen = ((encLen * 3) / 4) - (remainder > 0 ? (remainder == 2 ? 1 : 2) : 0);
     buffer = malloc(decLen);
     
-    for(i = 0; i < (encLen - 4); i += 4) {
-        strncpy(chunkIn, encData + i, 4);
-        chunkOut[0] = (char)((getIndexOf(chunkIn[0])<<2) | (getIndexOf(chunkIn[1])>>4));
-        chunkOut[1] = (char)(0xF0 & (getIndexOf(chunkIn[1])<<4) | 0x0F & (getIndexOf(chunkIn[2])>>2));
-        chunkOut[2] = (char)(0xC0 & (getIndexOf(chunkIn[2])<<6) | 0x3F & (getIndexOf(chunkIn[3])));
-        strncpy(buffer + ((i/4)*3), chunkOut, 3);
+    for(i = j = 0; i < (encLen - 4); i += 4, j += 3) {
+        buffer[j] = (char)((revTable[data[i]]<<2) | (revTable[data[i + 1]]>>4));
+        buffer[j+1] = (char)(0xF0 & (revTable[data[i + 1]]<<4) | 0x0F & (revTable[data[i + 2]]>>2));
+        buffer[j+2] = (char)(0xC0 & (revTable[data[i + 2]]<<6) | 0x3F & (revTable[data[i + 3]]));
     }
-    
-    strncpy(chunkIn, encData + encLen - 4, 4);
+
+    i = encLen - 4;
     switch(remainder) {
     case 0: 
-        chunkOut[0] = (char)((getIndexOf(chunkIn[0])<<2) | (getIndexOf(chunkIn[1])>>4));
-        chunkOut[1] = (char)(0xF0 & (getIndexOf(chunkIn[1])<<4) | 0x0F & (getIndexOf(chunkIn[2])>>2));
-        chunkOut[2] = (char)(0xC0 & (getIndexOf(chunkIn[2])<<6) | 0x3F & (getIndexOf(chunkIn[3])));
-        strncpy(buffer + decLen - 3, chunkOut, 3);
+        buffer[decLen-3] = (char)((revTable[data[i]]<<2) | (revTable[data[i + 1]]>>4));
+        buffer[decLen-2] = (char)(0xF0 & (revTable[data[i + 1]]<<4) | 0x0F & (revTable[data[i + 2]]>>2));
+        buffer[decLen-1] = (char)(0xC0 & (revTable[data[i + 2]]<<6) | 0x3F & (revTable[data[i + 3]]));
         break;
     case 1:
-        chunkOut[0] = (char)((getIndexOf(chunkIn[0])<<2) | (getIndexOf(chunkIn[1])>>4));		
-        buffer[decLen - 1] = chunkOut[0];
+        buffer[decLen-1] = (char)((revTable[data[i]]<<2) | (revTable[data[i+1]]>>4));		
         break;
     case 2:
-        chunkOut[0] = (char)((getIndexOf(chunkIn[0])<<2) | (getIndexOf(chunkIn[1])>>4));
-        chunkOut[1] = (char)(0xF0 & (getIndexOf(chunkIn[1])<<4) | 0x0F & (getIndexOf(chunkIn[2])>>2));
-        buffer[decLen - 2] = chunkOut[0];
-        buffer[decLen - 1] = chunkOut[1];
+        buffer[decLen-2] = (char)((revTable[data[i]]<<2) | (revTable[data[i+1]]>>4));
+        buffer[decLen-1] = (char)(0xF0 & (revTable[data[i+1]]<<4) | 0x0F & (revTable[data[i+2]]>>2));
         break;
     }
     
     return buffer;
-}
-
-int getIndexOf(char c) {
-    int i;
-    for(i = 0; i < TABLELEN; i++) {
-        if(indexTable[i] == c)
-            return i;
-    }
-    return INT32_MIN;
 }
