@@ -87,7 +87,7 @@ def main():
     print(decode(encode("123456")))
     print(decode("QUJDYWJjMTIzWFlaeHl6"))
     print(decode(encode("""This is a string that will be encoded and then decoded. 
-If you can read this, my hand crafted algorithm is working swimingly...
+If you can read this, my hand crafted algorithm is working swimmingly...
 Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~~""")))
 
     time_start = time.time()

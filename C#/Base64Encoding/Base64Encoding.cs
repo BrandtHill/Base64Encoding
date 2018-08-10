@@ -27,7 +27,7 @@ namespace Base64Encoding
             Console.WriteLine(Decode(Encode("123456")));
             Console.WriteLine(Decode("QUJDYWJjMTIzWFlaeHl6"));
             Console.WriteLine(Decode(Encode("This is a string that will be encoded and then decoded.\n"
-                    + "If you can read this, my hand crafted algorithm is working swimingly...\n"
+                    + "If you can read this, my hand crafted algorithm is working swimmingly...\n"
                     + "Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~~")));
 
             Stopwatch sw = new Stopwatch();

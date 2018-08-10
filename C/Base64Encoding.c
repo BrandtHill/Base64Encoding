@@ -38,7 +38,7 @@ int main(void) {
     printf("%s\n", decode(encode("123456")));
     printf("%s\n", decode("QUJDYWJjMTIzWFlaeHl6"));
     printf("%s\n", decode(encode("This is a string that will be encoded and then decoded.\n\
-If you can read this, my hand crafted algorithm is working swimingly...\n\
+If you can read this, my hand crafted algorithm is working swimmingly...\n\
 Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~~")));
 
     gettimeofday(&timeStart, NULL);

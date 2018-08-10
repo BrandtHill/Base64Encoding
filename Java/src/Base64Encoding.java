@@ -24,7 +24,7 @@ public class Base64Encoding {
 		System.out.println(decode(encode("123456")));
 		System.out.println(decode("QUJDYWJjMTIzWFlaeHl6"));
 		System.out.println(decode(encode("This is a string that will be encoded and then decoded. "
-				+ "If you can read this, my hand crafted algorithm is working swimingly... "
+				+ "If you can read this, my hand crafted algorithm is working swimmingly... "
 				+ "Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~~")));
 		
 		
