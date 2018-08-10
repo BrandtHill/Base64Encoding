@@ -1,6 +1,10 @@
 import time
 
 index_table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+rev_table = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,62,0,0,0,63,52,53,54,55,56,57,58,59,60,61,0,0,0,0,0,0,
+            0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,0,0,0,0,0,
+            0,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,0,0,0,0,0]
 
 largeData = """Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mi purus,
 mollis et pulvinar quis, elementum non felis. Ut bibendum dolor ut mauris tempus, euismod
@@ -14,85 +18,69 @@ def encode(data):
     dat_len = len(data)
     remainder = dat_len % 3
     enc_len = int((int(dat_len) / 3) * 4 + (4 if (remainder != 0) else 0))
-    
-    chunk_in = [''] * 3
-    chunk_out = [''] * 4
     buffer = [''] * enc_len
 
     i = 0
     j = 0
     while i < (dat_len - remainder):
-        chunk_in = data[i:i+3]
-        chunk_out[0] = index_table[  (chunk_in[0])>>2 ]
-        chunk_out[1] = index_table[ ((chunk_in[0]) & 0x03)<<4 | (chunk_in[1])>>4 ]
-        chunk_out[2] = index_table[ ((chunk_in[1]) & 0x0F)<<2 | (chunk_in[2])>>6 ]
-        chunk_out[3] = index_table[  (chunk_in[2]) & 0x3F ]
-        buffer[int(j):int(j+4)] = chunk_out
+        buffer[j] = index_table[  (data[i])>>2 ]
+        buffer[j+1] = index_table[ ((data[i]) & 0x03)<<4 | (data[i+1])>>4 ]
+        buffer[j+2] = index_table[ ((data[i+1]) & 0x0F)<<2 | (data[i+2])>>6 ]
+        buffer[j+3] = index_table[  (data[i+2]) & 0x3F ]
         i += 3
         j += 4
 
     if remainder > 0:
-        chunk_in = data[(dat_len - remainder):dat_len]
-        chunk_out[2:4] = '=='
-        chunk_out[0] = index_table[ (chunk_in[0])>>2 ]
+        i = dat_len - remainder
+        j = enc_len - 4
+        buffer[j+2:j+4] = '=='
+        buffer[j] = index_table[ (data[i])>>2 ]
         if remainder == 1:
-            chunk_out[1] = index_table[ ((chunk_in[0]) & 0x03)<<4 ]
+            buffer[j+1] = index_table[ ((data[i]) & 0x03)<<4 ]
         elif remainder == 2:
-            chunk_out[1] = index_table[ ((chunk_in[0]) & 0x03)<<4 | (chunk_in[1])>>4 ]
-            chunk_out[2] = index_table[ ((chunk_in[1]) & 0x0F)<<2 ]
-        buffer[enc_len - 4: enc_len] = chunk_out
+            buffer[j+1] = index_table[ ((data[i]) & 0x03)<<4 | (data[i+1])>>4 ]
+            buffer[j+2] = index_table[ ((data[i+1]) & 0x0F)<<2 ]
 
     return "".join(buffer)
 
-def decode(enc_data):
-    enc_len = len(enc_data)
+def decode(data):
+    enc_len = len(data)
     remainder = 0
-    if enc_data[enc_len - 1] == '=':
+    if data[enc_len - 1] == '=':
         remainder = 2
-        if enc_data[enc_len - 2] == '=':
+        if data[enc_len - 2] == '=':
             remainder = 1
     
     dec_len = int((enc_len * 3) / 4) - (0 if(remainder == 0) else (1 if(remainder == 2) else 2))
-    chunk_in = [''] * 4
-    chunk_out = [''] * 3
     buffer = [''] * dec_len
 
     i = 0
     j = 0
     while i < (enc_len - 4):
-        chunk_in = enc_data[i:i+4]
-        chunk_out[0] = chr((get_index_of(ord(chunk_in[0]))<<2) | (get_index_of(ord(chunk_in[1]))>>4))
-        chunk_out[1] = chr(0xF0 & (get_index_of(ord(chunk_in[1]))<<4) | 0x0F & (get_index_of(ord(chunk_in[2]))>>2))
-        chunk_out[2] = chr(0xC0 & (get_index_of(ord(chunk_in[2]))<<6) | 0x3F & (get_index_of(ord(chunk_in[3]))))
+        buffer[j] = chr((rev_table[ord(data[i])]<<2) | (rev_table[ord(data[i+1])]>>4))
+        buffer[j+1] = chr(0xF0 & (rev_table[ord(data[i+1])]<<4) | 0x0F & (rev_table[ord(data[i+2])]>>2))
+        buffer[j+2] = chr(0xC0 & (rev_table[ord(data[i+2])]<<6) | 0x3F & (rev_table[ord(data[i+3])]))
         
-        buffer[int(j):int(j)+4] = chunk_out
         i += 4
         j += 3
     
-    chunk_in = enc_data[enc_len-4:enc_len]
+    i = enc_len - 4
     if remainder == 0:
-        chunk_out[0] = chr((get_index_of(ord(chunk_in[0]))<<2) | (get_index_of(ord(chunk_in[1]))>>4))
-        chunk_out[1] = chr(0xF0 & (get_index_of(ord(chunk_in[1]))<<4) | 0x0F & (get_index_of(ord(chunk_in[2]))>>2))
-        chunk_out[2] = chr(0xC0 & (get_index_of(ord(chunk_in[2]))<<6) | 0x3F & (get_index_of(ord(chunk_in[3]))))
-        buffer[dec_len-3:dec_len] = chunk_out
+        buffer[dec_len-3] = chr((rev_table[ord(data[i])]<<2) | (rev_table[ord(data[i+1])]>>4))
+        buffer[dec_len-2] = chr(0xF0 & (rev_table[ord(data[i+1])]<<4) | 0x0F & (rev_table[ord(data[i+2])]>>2))
+        buffer[dec_len-1] = chr(0xC0 & (rev_table[ord(data[i+2])]<<6) | 0x3F & (rev_table[ord(data[i+3])]))
     elif remainder == 1:
-        chunk_out[0] = chr((get_index_of(ord(chunk_in[0]))<<2) | (get_index_of(ord(chunk_in[1]))>>4))
-        buffer[dec_len-1:dec_len] = chunk_out[0:1]
+        buffer[dec_len-1] = chr((rev_table[ord(data[i])]<<2) | (rev_table[ord(data[i+1])]>>4))
     elif remainder == 2:
-        chunk_out[0] = chr((get_index_of(ord(chunk_in[0]))<<2) | (get_index_of(ord(chunk_in[1]))>>4))
-        chunk_out[1] = chr(0xF0 & (get_index_of(ord(chunk_in[1]))<<4) | 0x0F & (get_index_of(ord(chunk_in[2]))>>2))
-        buffer[dec_len-2:dec_len] = chunk_out[0:2]
+        buffer[dec_len-2] = chr((rev_table[ord(data[i])]<<2) | (rev_table[ord(data[i+1])]>>4))
+        buffer[dec_len-1] = chr(0xF0 & (rev_table[ord(data[i+1])]<<4) | 0x0F & (rev_table[ord(data[i+2])]>>2))
 
     return "".join(buffer)
-
-def get_index_of(val):
-    for i in range(len(index_table)):
-        if chr(val) == index_table[i]:
-            return i
-    return
     
 def main():
     print(encode("AAAAAAAAAAAA"))
+    print(encode("AAAAAAAAAAAAA"))
+    print(encode("AAAAAAAAAAAAAA"))
     print(decode(encode("123")))
     print(decode(encode("1234")))
     print(decode(encode("12345")))
