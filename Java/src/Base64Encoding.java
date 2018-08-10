@@ -77,8 +77,6 @@ public class Base64Encoding {
 		int encLen = data.length();
 		int decLen;
 		int remainder;
-		char[] chunkIn = new char[4];
-		char[] chunkOut = new char[3];
 		
 		remainder = 0;
 		if(data.charAt(encLen-1) == '=') {
@@ -92,26 +90,24 @@ public class Base64Encoding {
 		StringBuffer buffer = new StringBuffer(decLen);
 		
 		for(int i = 0; i < (encLen - 4); i += 4) {
-			data.getChars(i, i + 4, chunkIn, 0);
-			chunkOut[0] = ((char)((revTable[chunkIn[0]]<<2) | (revTable[chunkIn[1]]>>>4)));
-			chunkOut[1] = ((char)(0xF0 & (revTable[chunkIn[1]]<<4) | 0x0F & (revTable[chunkIn[2]]>>>2)));
-			chunkOut[2] = ((char)(0xC0 & (revTable[chunkIn[2]]<<6) | 0x3F & (revTable[chunkIn[3]])));
-			buffer.append(chunkOut);			
+			buffer.append((char)((revTable[data.charAt(i)]<<2) | (revTable[data.charAt(i+1)]>>>4)));
+			buffer.append((char)(0xF0 & (revTable[data.charAt(i+1)]<<4) | 0x0F & (revTable[data.charAt(i+2)]>>>2)));
+			buffer.append((char)(0xC0 & (revTable[data.charAt(i+2)]<<6) | 0x3F & (revTable[data.charAt(i+3)])));			
 		}
 		
-		data.getChars(encLen - 4, encLen, chunkIn, 0);
+		int i = encLen - 4;
 		switch(remainder) {
 		case 0: 
-			buffer.append((char)((revTable[chunkIn[0]]<<2) | (revTable[chunkIn[1]]>>>4)));
-			buffer.append((char)(0xF0 & (revTable[chunkIn[1]]<<4) | 0x0F & (revTable[chunkIn[2]]>>>2)));
-			buffer.append((char)(0xC0 & (revTable[chunkIn[2]]<<6) | 0x3F & (revTable[chunkIn[3]])));
+			buffer.append((char)((revTable[data.charAt(i)]<<2) | (revTable[data.charAt(i+1)]>>>4)));
+			buffer.append((char)(0xF0 & (revTable[data.charAt(i+1)]<<4) | 0x0F & (revTable[data.charAt(i+2)]>>>2)));
+			buffer.append((char)(0xC0 & (revTable[data.charAt(i+2)]<<6) | 0x3F & (revTable[data.charAt(i+3)])));
 			break;
 		case 1:
-			buffer.append((char)((revTable[chunkIn[0]]<<2) | (revTable[chunkIn[1]]>>>4)));
+			buffer.append((char)((revTable[data.charAt(i)]<<2) | (revTable[data.charAt(i+1)]>>>4)));
 			break;
 		case 2:
-			buffer.append((char)((revTable[chunkIn[0]]<<2) | (revTable[chunkIn[1]]>>>4)));
-			buffer.append((char)(0xF0 & (revTable[chunkIn[1]]<<4) | 0x0F & (revTable[chunkIn[2]]>>>2)));
+			buffer.append((char)((revTable[data.charAt(i)]<<2) | (revTable[data.charAt(i+1)]>>>4)));
+			buffer.append((char)(0xF0 & (revTable[data.charAt(i+1)]<<4) | 0x0F & (revTable[data.charAt(i+2)]>>>2)));
 			break;
 		}
 		
