@@ -11,6 +11,11 @@ namespace Base64Encoding
     {
         static char[] indexTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".ToCharArray();
 
+        static int[] revTable = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                                 0,0,0,0,0,0,0,0,0,0,0,62,0,0,0,63,52,53,54,55,56,57,58,59,60,61,0,0,0,0,0,0,
+                                 0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,0,0,0,0,0,
+                                 0,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,0,0,0,0,0};
+
         static string largeData = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mi purus,\n"
         + "mollis et pulvinar quis, elementum non felis. Ut bibendum dolor ut mauris tempus, euismod\n"
         + "ultricies odio vulputate. Nunc finibus elit non venenatis maximus. Maecenas in mollis ipsum,\n"
@@ -21,6 +26,8 @@ namespace Base64Encoding
         static void Main(string[] args)
         {
             Console.WriteLine(Encode("AAAAAAAAAAAA"));
+            Console.WriteLine(Encode("AAAAAAAAAAAAA"));
+            Console.WriteLine(Encode("AAAAAAAAAAAAAA"));
             Console.WriteLine(Decode(Encode("123")));
             Console.WriteLine(Decode(Encode("1234")));
             Console.WriteLine(Decode(Encode("12345")));
@@ -50,52 +57,48 @@ namespace Base64Encoding
             int remainder = datLen % 3;
             int encLen = (datLen / 3) * 4 + (remainder != 0 ? 4 : 0);
             StringBuilder buffer = new StringBuilder(encLen);
-            char[] chunkOut = new char[4];
-            char[] chunkIn = new char[3];
 
             for (int i = 0; i < (datLen - remainder); i += 3)
             {
-                data.CopyTo(i, chunkIn, 0, 3);
-                chunkOut[0] = indexTable[chunkIn[0] >> 2];
-                chunkOut[1] = indexTable[(chunkIn[0] & 0x03) << 4 | chunkIn[1] >> 4];
-                chunkOut[2] = indexTable[(chunkIn[1] & 0x0F) << 2 | chunkIn[2] >> 6];
-                chunkOut[3] = indexTable[chunkIn[2] & 0x3F];
-                buffer.Append(chunkOut);
+                buffer.Append(indexTable[data[i] >> 2]);
+                buffer.Append(indexTable[(data[i] & 0x03) << 4 | data[i+1] >> 4]);
+                buffer.Append(indexTable[(data[i+1] & 0x0F) << 2 | data[i+2] >> 6]);
+                buffer.Append(indexTable[data[i+2] & 0x3F]);
             }
 
             if (remainder > 0)
             {
-                data.CopyTo(datLen - remainder, chunkIn, 0, remainder);
-                chunkOut = "====".ToCharArray();
-                chunkOut[0] = indexTable[chunkIn[0] >> 2];
+                int i = datLen - remainder;
+                buffer.Append(indexTable[data[i] >> 2]);
                 if (remainder == 1)
                 {
-                    chunkOut[1] = indexTable[(chunkIn[0] & 0x03) << 4];
+                    buffer.Append(indexTable[(data[i] & 0x03) << 4]);
+                    buffer.Append("==");
                 }
                 else if (remainder == 2)
                 {
-                    chunkOut[1] = indexTable[(chunkIn[0] & 0x03) << 4 | chunkIn[1] >> 4];
-                    chunkOut[2] = indexTable[(chunkIn[1] & 0x0F) << 2];
+                    buffer.Append(indexTable[(data[i] & 0x03) << 4 | data[i+1] >> 4]);
+                    buffer.Append(indexTable[(data[i+1] & 0x0F) << 2]);
+                    buffer.Append('=');
                 }
-                buffer.Append(chunkOut);
             }
 
             return buffer.ToString();
         }
 
-        public static string Decode(string encData)
+        public static string Decode(string data)
         {
-            int encLen = encData.Length;
+            int encLen = data.Length;
             int decLen;
             int remainder;
             char[] chunkIn = new char[4];
             char[] chunkOut = new char[3];
 
             remainder = 0;
-            if (encData[encLen - 1] == '=')
+            if (data[encLen - 1] == '=')
             {
                 remainder = 2;
-                if (encData[encLen - 2] == '=')
+                if (data[encLen - 2] == '=')
                 {
                     remainder = 1;
                 }
@@ -104,33 +107,27 @@ namespace Base64Encoding
 
             StringBuilder buffer = new StringBuilder(decLen);
 
-            for (int i = 0; i < (encLen - 4); i += 4)
+            for (int j = 0; j < (encLen - 4); j += 4)
             {
-                encData.CopyTo(i, chunkIn, 0, 4);
-                chunkOut[0] = (char)((Array.IndexOf(indexTable, chunkIn[0]) << 2) | (Array.IndexOf(indexTable, chunkIn[1]) >> 4));
-                chunkOut[1] = (char)(0xF0 & (Array.IndexOf(indexTable, chunkIn[1]) << 4) | 0x0F & (Array.IndexOf(indexTable, chunkIn[2]) >> 2));
-                chunkOut[2] = (char)(0xC0 & (Array.IndexOf(indexTable, chunkIn[2]) << 6) | 0x3F & (Array.IndexOf(indexTable, chunkIn[3])));
-                buffer.Append(chunkOut);
+                buffer.Append((char)((revTable[data[j]] << 2) | (revTable[data[j + 1]] >> 4)));
+                buffer.Append((char)(0xF0 & (revTable[data[j + 1]] << 4) | 0x0F & (revTable[data[j + 2]] >> 2)));
+                buffer.Append((char)(0xC0 & (revTable[data[j + 2]] << 6) | 0x3F & (revTable[data[j + 3]])));
             }
 
-            encData.CopyTo(encLen - 4, chunkIn, 0, 4);
+            int i = encLen - 4;
             switch (remainder)
             {
                 case 0:
-                    chunkOut[0] = (char)((Array.IndexOf(indexTable, chunkIn[0]) << 2) | (Array.IndexOf(indexTable, chunkIn[1]) >> 4));
-                    chunkOut[1] = (char)(0xF0 & (Array.IndexOf(indexTable, chunkIn[1]) << 4) | 0x0F & (Array.IndexOf(indexTable, chunkIn[2]) >> 2));
-                    chunkOut[2] = (char)(0xC0 & (Array.IndexOf(indexTable, chunkIn[2]) << 6) | 0x3F & (Array.IndexOf(indexTable, chunkIn[3])));
-                    buffer.Append(chunkOut);
+                    buffer.Append((char)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
+                    buffer.Append((char)(0xF0 & (revTable[data[i + 1]] << 4) | 0x0F & (revTable[data[i + 2]] >> 2)));
+                    buffer.Append((char)(0xC0 & (revTable[data[i + 2]] << 6) | 0x3F & (revTable[data[i + 3]])));
                     break;
                 case 1:
-                    chunkOut[0] = (char)((Array.IndexOf(indexTable, chunkIn[0]) << 2) | (Array.IndexOf(indexTable, chunkIn[1]) >> 4));
-                    buffer.Append(chunkOut[0]);
+                    buffer.Append((char)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
                     break;
                 case 2:
-                    chunkOut[0] = (char)((Array.IndexOf(indexTable, chunkIn[0]) << 2) | (Array.IndexOf(indexTable, chunkIn[1]) >> 4));
-                    chunkOut[1] = (char)(0xF0 & (Array.IndexOf(indexTable, chunkIn[1]) << 4) | 0x0F & (Array.IndexOf(indexTable, chunkIn[2]) >> 2));
-                    buffer.Append(chunkOut[0]);
-                    buffer.Append(chunkOut[1]);
+                    buffer.Append((char)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
+                    buffer.Append((char)(0xF0 & (revTable[data[i + 1]] << 4) | 0x0F & (revTable[data[i + 2]] >> 2)));
                     break;
             }
 
