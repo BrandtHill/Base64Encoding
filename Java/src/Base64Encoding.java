@@ -1,6 +1,11 @@
 public class Base64Encoding {
 
 	static char[] indexTable = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
+	
+	static int[] revTable = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,0,0,0,62,0,0,0,63,52,53,54,55,56,57,58,59,60,61,0,0,0,0,0,0,
+            0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,0,0,0,0,0,
+            0,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,0,0,0,0,0};
 
 	static String largeData = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mi purus,\n"
 			+ "mollis et pulvinar quis, elementum non felis. Ut bibendum dolor ut mauris tempus, euismod\n"
@@ -11,6 +16,8 @@ public class Base64Encoding {
 	
 	public static void main(String[] args) {		
 		System.out.println(encode("AAAAAAAAAAAA"));
+		System.out.println(encode("AAAAAAAAAAAAA"));
+		System.out.println(encode("AAAAAAAAAAAAAA"));
 		System.out.println(decode(encode("123")));
 		System.out.println(decode(encode("1234")));
 		System.out.println(decode(encode("12345")));
@@ -41,46 +48,42 @@ public class Base64Encoding {
 		int remainder = datLen % 3;
 		int encLen = (datLen / 3) * 4 + (remainder != 0 ? 4 : 0);
 		StringBuffer buffer = new StringBuffer(encLen);
-		char[] chunkOut = new char[4];
-		char[] chunkIn = new char[3];
 		
 		for(int i = 0; i < (datLen - remainder); i += 3) {
-			data.getChars(i, i + 3, chunkIn, 0);
-			chunkOut[0] = indexTable[  chunkIn[0]>>>2 ];
-			chunkOut[1] = indexTable[ (chunkIn[0] & 0x03)<<4 | chunkIn[1]>>>4 ];
-			chunkOut[2] = indexTable[ (chunkIn[1] & 0x0F)<<2 | chunkIn[2]>>>6 ];
-			chunkOut[3] = indexTable[  chunkIn[2] & 0x3F ];
-			buffer.append(chunkOut);
+			buffer.append(indexTable[  data.charAt(i)>>>2 ]);
+			buffer.append(indexTable[ (data.charAt(i) & 0x03)<<4 | data.charAt(i+1)>>>4 ]);
+			buffer.append(indexTable[ (data.charAt(i+1) & 0x0F)<<2 | data.charAt(i+2)>>>6 ]);
+			buffer.append(indexTable[  data.charAt(i+2) & 0x3F ]);
 		}
 		
 		if(remainder > 0) {
-			data.getChars(datLen - remainder, datLen, chunkIn, 0);
-			chunkOut = "====".toCharArray();
-			chunkOut[0] = indexTable[  chunkIn[0]>>>2 ];
+			int i = datLen - remainder;
+			buffer.append(indexTable[  data.charAt(i)>>>2 ]);
 			if(remainder == 1) {
-				chunkOut[1] = indexTable[ (chunkIn[0] & 0x03)<<4 ];
+				buffer.append(indexTable[ (data.charAt(i) & 0x03)<<4 ]);
+				buffer.append("==");
 			}
 			else if (remainder == 2) {
-				chunkOut[1] = indexTable[ (chunkIn[0] & 0x03)<<4 | chunkIn[1]>>>4 ];
-				chunkOut[2] = indexTable[ (chunkIn[1] & 0x0F)<<2 ];
+				buffer.append(indexTable[ (data.charAt(i) & 0x03)<<4 | data.charAt(i+1)>>>4 ]);
+				buffer.append(indexTable[ (data.charAt(i+1) & 0x0F)<<2 ]);
+				buffer.append('=');
 			}
-			buffer.append(chunkOut);
 		}
-		
+
 		return buffer.toString();
 	}
 	
-	public static String decode(String encData) {
-		int encLen = encData.length();
+	public static String decode(String data) {
+		int encLen = data.length();
 		int decLen;
 		int remainder;
 		char[] chunkIn = new char[4];
 		char[] chunkOut = new char[3];
 		
 		remainder = 0;
-		if(encData.charAt(encLen-1) == '=') {
+		if(data.charAt(encLen-1) == '=') {
 			remainder = 2;
-			if(encData.charAt(encLen-2) == '=') {
+			if(data.charAt(encLen-2) == '=') {
 				remainder = 1;
 			}
 		}
@@ -89,42 +92,30 @@ public class Base64Encoding {
 		StringBuffer buffer = new StringBuffer(decLen);
 		
 		for(int i = 0; i < (encLen - 4); i += 4) {
-			encData.getChars(i, i + 4, chunkIn, 0);
-			chunkOut[0] = (char)((getIndexOf(chunkIn[0])<<2) | (getIndexOf(chunkIn[1])>>>4));
-			chunkOut[1] = (char)(0xF0 & (getIndexOf(chunkIn[1])<<4) | 0x0F & (getIndexOf(chunkIn[2])>>>2));
-			chunkOut[2] = (char)(0xC0 & (getIndexOf(chunkIn[2])<<6) | 0x3F & (getIndexOf(chunkIn[3])));
+			data.getChars(i, i + 4, chunkIn, 0);
+			chunkOut[0] = ((char)((revTable[chunkIn[0]]<<2) | (revTable[chunkIn[1]]>>>4)));
+			chunkOut[1] = ((char)(0xF0 & (revTable[chunkIn[1]]<<4) | 0x0F & (revTable[chunkIn[2]]>>>2)));
+			chunkOut[2] = ((char)(0xC0 & (revTable[chunkIn[2]]<<6) | 0x3F & (revTable[chunkIn[3]])));
 			buffer.append(chunkOut);			
 		}
 		
-		encData.getChars(encLen - 4, encLen, chunkIn, 0);
+		data.getChars(encLen - 4, encLen, chunkIn, 0);
 		switch(remainder) {
 		case 0: 
-			chunkOut[0] = (char)((getIndexOf(chunkIn[0])<<2) | (getIndexOf(chunkIn[1])>>>4));
-			chunkOut[1] = (char)(0xF0 & (getIndexOf(chunkIn[1])<<4) | 0x0F & (getIndexOf(chunkIn[2])>>>2));
-			chunkOut[2] = (char)(0xC0 & (getIndexOf(chunkIn[2])<<6) | 0x3F & (getIndexOf(chunkIn[3])));
-			buffer.append(chunkOut);
+			buffer.append((char)((revTable[chunkIn[0]]<<2) | (revTable[chunkIn[1]]>>>4)));
+			buffer.append((char)(0xF0 & (revTable[chunkIn[1]]<<4) | 0x0F & (revTable[chunkIn[2]]>>>2)));
+			buffer.append((char)(0xC0 & (revTable[chunkIn[2]]<<6) | 0x3F & (revTable[chunkIn[3]])));
 			break;
 		case 1:
-			chunkOut[0] = (char)((getIndexOf(chunkIn[0])<<2) | (getIndexOf(chunkIn[1])>>>4));
-			buffer.append(chunkOut[0]);			
+			buffer.append((char)((revTable[chunkIn[0]]<<2) | (revTable[chunkIn[1]]>>>4)));
 			break;
 		case 2:
-			chunkOut[0] = (char)((getIndexOf(chunkIn[0])<<2) | (getIndexOf(chunkIn[1])>>>4));
-			chunkOut[1] = (char)(0xF0 & (getIndexOf(chunkIn[1])<<4) | 0x0F & (getIndexOf(chunkIn[2])>>>2));
-			buffer.append(chunkOut[0]);
-			buffer.append(chunkOut[1]);
+			buffer.append((char)((revTable[chunkIn[0]]<<2) | (revTable[chunkIn[1]]>>>4)));
+			buffer.append((char)(0xF0 & (revTable[chunkIn[1]]<<4) | 0x0F & (revTable[chunkIn[2]]>>>2)));
 			break;
 		}
 		
 		return buffer.toString();
-	}
-	
-	private static int getIndexOf(char c) {
-		for(int i = 0; i < indexTable.length; i++) {
-			if(indexTable[i] == c)
-				return i;
-		}
-		return Integer.MIN_VALUE;
 	}
 
 }
