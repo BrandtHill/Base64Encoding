@@ -1,7 +1,7 @@
 # Base64Encoding
 
 ### Introduction
-Hi ya'll.
+Hi y'all.
 I decided to implement Base 64 encoding and decoding in several different languages. Base 64 Encoding is a way to represent data in strings whose characters fall within a 64-length (+1) subset of ASCII characters. There are probably better ways to do it, but I wrote the encode/decode algorithms how I imagined they should be done.
 
 ### How It Works
