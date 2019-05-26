@@ -42,7 +42,7 @@ If you can read this, my hand crafted algorithm is working swimmingly...\n\
 Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~~")));
 
     gettimeofday(&timeStart, NULL);
-    for(i = 0; i<1000000; i++){
+    for (i = 0; i<1000000; i++){
         largeTest_enc = (char*)encode(largeData);
         largeTest_dec = (char*)decode(largeTest_enc);
         free(largeTest_enc);
@@ -60,18 +60,17 @@ Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~
 char* encode(char* data) {
     int datLen = strlen(data);
     int remainder = datLen % 3;
-    int encLen = (datLen / 3) * 4 + (remainder != 0 ? 4 : 0);
-    char* buffer = malloc(encLen);
+    int encLen = (datLen / 3) * 4 + (remainder ? 4 : 0);
+    char* buffer = calloc(encLen + 1, sizeof(char));
     int i,j;
-    for(i = j = 0; i < (datLen - remainder); i += 3, j += 4) {
+    for (i = j = 0; i < (datLen - remainder); i += 3, j += 4) {
         buffer[j]   = indexTable[  data[i]>>2 ];
         buffer[j+1] = indexTable[ (data[i]   & 0x03)<<4 | data[i+1]>>4 ];
         buffer[j+2] = indexTable[ (data[i+1] & 0x0F)<<2 | data[i+2]>>6 ];
         buffer[j+3] = indexTable[  data[i+2] & 0x3F ];
     }
     
-    if(remainder > 0) 
-    {
+    if (remainder) {
         i = datLen - remainder;
         j = encLen - 4;
         strncpy(buffer + j, "====", 4);
@@ -103,10 +102,10 @@ char* decode(char* data) {
         }
     }
 
-    decLen = ((encLen * 3) / 4) - (remainder > 0 ? (remainder == 2 ? 1 : 2) : 0);
-    buffer = malloc(decLen);
+    decLen = ((encLen * 3) / 4) - (remainder ? (remainder == 2 ? 1 : 2) : 0);
+    buffer = calloc(decLen + 1, sizeof(char));
     
-    for(i = j = 0; i < (encLen - 4); i += 4, j += 3) {
+    for (i = j = 0; i < (encLen - 4); i += 4, j += 3) {
         buffer[j] = (char)((revTable[data[i]]<<2) | (revTable[data[i + 1]]>>4));
         buffer[j+1] = (char)(0xF0 & (revTable[data[i + 1]]<<4) | 0x0F & (revTable[data[i + 2]]>>2));
         buffer[j+2] = (char)(0xC0 & (revTable[data[i + 2]]<<6) | 0x3F & (revTable[data[i + 3]]));
