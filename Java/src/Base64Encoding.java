@@ -41,7 +41,7 @@ public class Base64Encoding {
 		
 	}
 	
-	public static String encode(String str) { try { return encode(str.getBytes("UTF-8")); } catch (Exception e) {} }
+	public static String encode(String str) { try { return encode(str.getBytes("UTF-8")); } catch (Exception e) { return e.toString(); } }
 
 	public static String encode(byte[] data) {
 		int datLen = data.length;
