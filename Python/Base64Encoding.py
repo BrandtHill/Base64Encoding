@@ -14,7 +14,8 @@ mattis libero vitae nunc tempor, eget posuere ipsum molestie. Curabitur semper t
 Morbi rutrum sollicitudin augue, rhoncus viverra velit volutpat vitae.\r\n"""
 
 def encode(data):
-    data = bytes(data, 'UTF-8')
+    if type(data) is str: 
+        data = bytes(data, 'UTF-8')
     dat_len = len(data)
     remainder = dat_len % 3
     enc_len = int((int(dat_len) / 3) * 4 + (4 if (remainder != 0) else 0))
@@ -41,7 +42,7 @@ def encode(data):
             buffer[j+1] = index_table[ ((data[i]) & 0x03)<<4 | (data[i+1])>>4 ]
             buffer[j+2] = index_table[ ((data[i+1]) & 0x0F)<<2 ]
 
-    return "".join(buffer)
+    return ''.join(buffer)
 
 def decode(data):
     enc_len = len(data)
@@ -52,46 +53,43 @@ def decode(data):
             remainder = 1
     
     dec_len = int((enc_len * 3) / 4) - (0 if(remainder == 0) else (1 if(remainder == 2) else 2))
-    buffer = [''] * dec_len
+    buffer = bytearray(dec_len)
 
     i = 0
     j = 0
     while i < (enc_len - 4):
-        buffer[j] = chr((rev_table[ord(data[i])]<<2) | (rev_table[ord(data[i+1])]>>4))
-        buffer[j+1] = chr(0xF0 & (rev_table[ord(data[i+1])]<<4) | 0x0F & (rev_table[ord(data[i+2])]>>2))
-        buffer[j+2] = chr(0xC0 & (rev_table[ord(data[i+2])]<<6) | 0x3F & (rev_table[ord(data[i+3])]))
+        buffer[j] = (rev_table[ord(data[i])]<<2) | (rev_table[ord(data[i+1])]>>4)
+        buffer[j+1] = 0xF0 & (rev_table[ord(data[i+1])]<<4) | 0x0F & (rev_table[ord(data[i+2])]>>2)
+        buffer[j+2] = 0xC0 & (rev_table[ord(data[i+2])]<<6) | 0x3F & (rev_table[ord(data[i+3])])
         
         i += 4
         j += 3
     
     i = enc_len - 4
     if remainder == 0:
-        buffer[dec_len-3] = chr((rev_table[ord(data[i])]<<2) | (rev_table[ord(data[i+1])]>>4))
-        buffer[dec_len-2] = chr(0xF0 & (rev_table[ord(data[i+1])]<<4) | 0x0F & (rev_table[ord(data[i+2])]>>2))
-        buffer[dec_len-1] = chr(0xC0 & (rev_table[ord(data[i+2])]<<6) | 0x3F & (rev_table[ord(data[i+3])]))
+        buffer[dec_len-3] = (rev_table[ord(data[i])]<<2) | (rev_table[ord(data[i+1])]>>4)
+        buffer[dec_len-2] = 0xF0 & (rev_table[ord(data[i+1])]<<4) | 0x0F & (rev_table[ord(data[i+2])]>>2)
+        buffer[dec_len-1] = 0xC0 & (rev_table[ord(data[i+2])]<<6) | 0x3F & (rev_table[ord(data[i+3])])
     elif remainder == 1:
-        buffer[dec_len-1] = chr((rev_table[ord(data[i])]<<2) | (rev_table[ord(data[i+1])]>>4))
+        buffer[dec_len-1] = (rev_table[ord(data[i])]<<2) | (rev_table[ord(data[i+1])]>>4)
     elif remainder == 2:
-        buffer[dec_len-2] = chr((rev_table[ord(data[i])]<<2) | (rev_table[ord(data[i+1])]>>4))
-        buffer[dec_len-1] = chr(0xF0 & (rev_table[ord(data[i+1])]<<4) | 0x0F & (rev_table[ord(data[i+2])]>>2))
+        buffer[dec_len-2] = (rev_table[ord(data[i])]<<2) | (rev_table[ord(data[i+1])]>>4)
+        buffer[dec_len-1] = 0xF0 & (rev_table[ord(data[i+1])]<<4) | 0x0F & (rev_table[ord(data[i+2])]>>2)
 
-    return "".join(buffer)
+    return (buffer)
     
 def main():
-    print(encode("AAAAAAAAAAAA"))
-    print(encode("AAAAAAAAAAAAA"))
-    print(encode("AAAAAAAAAAAAAA"))
-    print(decode(encode("123")))
-    print(decode(encode("1234")))
-    print(decode(encode("12345")))
-    print(decode(encode("123456")))
-    print(decode("QUJDYWJjMTIzWFlaeHl6"))
-    print(decode(encode("""This is a string that will be encoded and then decoded. 
-If you can read this, my hand crafted algorithm is working swimmingly...
-Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~~""")))
+    print(encode('AAAAAAAAAAAA'))
+    print(encode('AAAAAAAAAAAAA'))
+    print(encode('AAAAAAAAAAAAAA'))
+    print(decode(encode('123')))
+    print(decode(encode('1234')))
+    print(decode(encode('12345')))
+    print(decode(encode('123456')))
+    print(decode('QUJDYWJjMTIzWFlaeHl6'))
 
     time_start = time.time()
-    for i in range(1000000):
+    for _ in range(10000):
         largeTest = decode(encode(largeData))
     time_stop = time.time()
     
