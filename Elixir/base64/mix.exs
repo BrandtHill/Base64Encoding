@@ -15,7 +15,6 @@ defmodule Base64.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {Timer, []}
     ]
   end
 
