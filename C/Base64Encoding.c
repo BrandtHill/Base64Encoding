@@ -4,9 +4,6 @@
 #include <time.h>
 #include <sys/time.h>
 
-#define TABLELEN 64
-#define INT32_MIN (-2147483647 - 1)
-
 char* encode(char*);
 char* decode(char*);
 
@@ -37,9 +34,6 @@ int main(void) {
     printf("%s\n", decode(encode("12345")));
     printf("%s\n", decode(encode("123456")));
     printf("%s\n", decode("QUJDYWJjMTIzWFlaeHl6"));
-    printf("%s\n", decode(encode("This is a string that will be encoded and then decoded.\n\
-If you can read this, my hand crafted algorithm is working swimmingly...\n\
-Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~~")));
 
     gettimeofday(&timeStart, NULL);
     for (i = 0; i<1000000; i++){
@@ -89,22 +83,11 @@ char* encode(char* data) {
 
 char* decode(char* data) {
     int encLen = strlen(data);
-    int decLen;
-    int remainder;
+    int remainder = data[encLen - 1] == '=' ? (data[encLen - 2] == '=' ? 1 : 2) : 0;
+    int decLen = ((encLen * 3) / 4) - (remainder ? (remainder == 2 ? 1 : 2) : 0);
     int i,j;
-    char* buffer;
+    char* buffer = calloc(decLen + 1, sizeof(char));
 
-    remainder = 0;
-    if (data[encLen - 1] == '=') {
-        remainder = 2;
-        if (data[encLen-2] == '=') {
-            remainder = 1;
-        }
-    }
-
-    decLen = ((encLen * 3) / 4) - (remainder ? (remainder == 2 ? 1 : 2) : 0);
-    buffer = calloc(decLen + 1, sizeof(char));
-    
     for (i = j = 0; i < (encLen - 4); i += 4, j += 3) {
         buffer[j] = (char)((revTable[data[i]]<<2) | (revTable[data[i + 1]]>>4));
         buffer[j+1] = (char)(0xF0 & (revTable[data[i + 1]]<<4) | 0x0F & (revTable[data[i + 2]]>>2));
