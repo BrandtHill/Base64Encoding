@@ -89,7 +89,7 @@ def main():
     print(decode('QUJDYWJjMTIzWFlaeHl6'))
 
     time_start = time.time()
-    for _ in range(10000):
+    for _ in range(1000000):
         largeTest = decode(encode(largeData))
     time_stop = time.time()
     
