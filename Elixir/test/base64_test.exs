@@ -40,7 +40,7 @@ Morbi rutrum sollicitudin augue, rhoncus viverra velit volutpat vitae.
 
   test "Benchmark 10K Enc/Dec Sync" do
     t0 = System.system_time(:millisecond)
-    Enum.each(1..100_000, fn _x -> @big_string |> Base64.encode |> Base64.decode end)
+    Enum.each(1..10_000, fn _x -> @big_string |> Base64.encode |> Base64.decode end)
     t1 = System.system_time(:millisecond)
     IO.puts("10K Enc & Dec Sync completed in #{(t1 - t0)/1_000} seconds")
   end
@@ -62,7 +62,7 @@ Morbi rutrum sollicitudin augue, rhoncus viverra velit volutpat vitae.
 
   test "Benchmark 10K Enc/Dec Async" do
     t0 = System.system_time(:millisecond)
-    Task.async_stream(1..100_000, fn _x -> @big_string |> Base64.encode |> Base64.decode end) |> Enum.to_list
+    Task.async_stream(1..10_000, fn _x -> @big_string |> Base64.encode |> Base64.decode end) |> Enum.to_list
     t1 = System.system_time(:millisecond)
     IO.puts("10K Enc & Dec Async completed in #{(t1 - t0)/1_000} seconds")
   end
