@@ -1,8 +1,8 @@
 *.exe
 .vscode/
 .gitattributes
-.core
-.class
+*.core
+*.class
 
 # ---------
  

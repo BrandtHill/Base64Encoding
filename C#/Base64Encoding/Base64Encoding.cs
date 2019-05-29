@@ -37,15 +37,13 @@ namespace Base64Encoding
 
             Stopwatch sw = new Stopwatch();
             byte[] largeTest = null;
+            
             sw.Start();
-            for(int i = 0; i < 1000000; i++)
-            {
-                largeTest = Decode(Encode(largeData));
-            }
+            for (int i = 0; i < 1000000; i++) largeTest = Decode(Encode(largeData));
             sw.Stop();
+
             Console.Write(Encoding.UTF8.GetString(largeTest));
             Console.WriteLine("Total time in seconds: " + sw.Elapsed.TotalSeconds);
-
             Console.Read();
         }
 
@@ -56,32 +54,19 @@ namespace Base64Encoding
             int datLen = data.Length;
             int remainder = datLen % 3;
             int encLen = (datLen / 3) * 4 + (remainder != 0 ? 4 : 0);
+            int i;
             StringBuilder buffer = new StringBuilder(encLen);
 
-            for (int i = 0; i < (datLen - remainder); i += 3)
+            for (i = 0; i < (datLen - remainder); i += 3)
             {
                 buffer.Append(indexTable[data[i] >> 2]);
-                buffer.Append(indexTable[(data[i] & 0x03) << 4 | data[i+1] >> 4]);
-                buffer.Append(indexTable[(data[i+1] & 0x0F) << 2 | data[i+2] >> 6]);
-                buffer.Append(indexTable[data[i+2] & 0x3F]);
+                buffer.Append(indexTable[(data[i] & 0x03) << 4 | data[i + 1] >> 4]);
+                buffer.Append(indexTable[(data[i + 1] & 0x0F) << 2 | data[i + 2] >> 6]);
+                buffer.Append(indexTable[data[i + 2] & 0x3F]);
             }
 
-            if (remainder > 0)
-            {
-                int i = datLen - remainder;
-                buffer.Append(indexTable[data[i] >> 2]);
-                if (remainder == 1)
-                {
-                    buffer.Append(indexTable[(data[i] & 0x03) << 4]);
-                    buffer.Append("==");
-                }
-                else if (remainder == 2)
-                {
-                    buffer.Append(indexTable[(data[i] & 0x03) << 4 | data[i+1] >> 4]);
-                    buffer.Append(indexTable[(data[i+1] & 0x0F) << 2]);
-                    buffer.Append('=');
-                }
-            }
+            if (remainder == 1) buffer.Append(new char[] { indexTable[data[i] >> 2], indexTable[(data[i] & 0x03) << 4], '=', '=' });
+            if (remainder == 2) buffer.Append(new char[] { indexTable[data[i] >> 2], indexTable[(data[i] & 0x03) << 4 | data[i + 1] >> 4], indexTable[(data[i + 1] & 0x0F) << 2], '='});
 
             return buffer.ToString();
         }
@@ -90,36 +75,26 @@ namespace Base64Encoding
         {
             int encLen = data.Length;
             int remainder = data[encLen - 1] == '=' ? (data[encLen - 2] == '=' ? 1 : 2) : 0;
-            int decLen = ((encLen * 3) / 4) - (remainder > 0 ? (remainder == 2 ? 1 : 2) : 0);
+            int decLen = ((encLen * 3) / 4) + ((remainder - 3) % 3);
+
+            int tmp = remainder + decLen;
 
             //Tried using MemoryStream (like Java ByteBuffer) but it was about 60% slower than byte array;
             var buffer = new byte[decLen];
 
             int i, j;
-            for (i = j = 0; i < (encLen - 4); i += 4, j += 3)
+            for (i = j = 0; i < (encLen - 4); i += 4)
             {
-                buffer[j] = ((byte)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
-                buffer[j + 1] = ((byte)(0xF0 & (revTable[data[i + 1]] << 4) | 0x0F & (revTable[data[i + 2]] >> 2)));
-                buffer[j + 2] = ((byte)(0xC0 & (revTable[data[i + 2]] << 6) | 0x3F & (revTable[data[i + 3]])));
+                buffer[j++] = ((byte)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
+                buffer[j++] = ((byte)(0xF0 & (revTable[data[i + 1]] << 4) | 0x0F & (revTable[data[i + 2]] >> 2)));
+                buffer[j++] = ((byte)(0xC0 & (revTable[data[i + 2]] << 6) | 0x3F & (revTable[data[i + 3]])));
             }
-
-            i = encLen - 4;
-            switch (remainder)
-            {
-                case 0:
-                    buffer[decLen - 3] = ((byte)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
-                    buffer[decLen - 2] = ((byte)(0xF0 & (revTable[data[i + 1]] << 4) | 0x0F & (revTable[data[i + 2]] >> 2)));
-                    buffer[decLen - 1] = ((byte)(0xC0 & (revTable[data[i + 2]] << 6) | 0x3F & (revTable[data[i + 3]])));
-                    break;
-                case 1:
-                    buffer[decLen - 1] = ((byte)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
-                    break;
-                case 2:
-                    buffer[decLen - 2] = ((byte)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
-                    buffer[decLen - 1] = ((byte)(0xF0 & (revTable[data[i + 1]] << 4) | 0x0F & (revTable[data[i + 2]] >> 2)));
-                    break;
-            }
-
+            
+            buffer[j++] = ((byte)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
+            if (remainder == 1) return buffer;
+            buffer[j++] = ((byte)(0xF0 & (revTable[data[i + 1]] << 4) | 0x0F & (revTable[data[i + 2]] >> 2)));
+            if (remainder == 2) return buffer;
+            buffer[j++] = ((byte)(0xC0 & (revTable[data[i + 2]] << 6) | 0x3F & (revTable[data[i + 3]])));
             return buffer;
         }
     }

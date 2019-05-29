@@ -52,15 +52,15 @@ def decode(data):
         if data[enc_len - 2] == '=':
             remainder = 1
     
-    dec_len = int((enc_len * 3) / 4) - (0 if(remainder == 0) else (1 if(remainder == 2) else 2))
+    dec_len = int((enc_len * 3) / 4) - (remainder - 3) % 3
     buffer = bytearray(dec_len)
 
     i = 0
     j = 0
     while i < (enc_len - 4):
         buffer[j] = (rev_table[ord(data[i])]<<2) | (rev_table[ord(data[i+1])]>>4)
-        buffer[j+1] = 0xF0 & (rev_table[ord(data[i+1])]<<4) | 0x0F & (rev_table[ord(data[i+2])]>>2)
-        buffer[j+2] = 0xC0 & (rev_table[ord(data[i+2])]<<6) | 0x3F & (rev_table[ord(data[i+3])])
+        buffer[j+1] = (rev_table[ord(data[i+1])]<<4) & 0xF0 | (rev_table[ord(data[i+2])]>>2) & 0x0F
+        buffer[j+2] = (rev_table[ord(data[i+2])]<<6) & 0xC0 | (rev_table[ord(data[i+3])]) & 0x3F
         
         i += 4
         j += 3
@@ -68,8 +68,8 @@ def decode(data):
     i = enc_len - 4
     if remainder == 0:
         buffer[dec_len-3] = (rev_table[ord(data[i])]<<2) | (rev_table[ord(data[i+1])]>>4)
-        buffer[dec_len-2] = 0xF0 & (rev_table[ord(data[i+1])]<<4) | 0x0F & (rev_table[ord(data[i+2])]>>2)
-        buffer[dec_len-1] = 0xC0 & (rev_table[ord(data[i+2])]<<6) | 0x3F & (rev_table[ord(data[i+3])])
+        buffer[dec_len-2] = (rev_table[ord(data[i+1])]<<4) & 0xF0 | (rev_table[ord(data[i+2])]>>2) & 0x0F
+        buffer[dec_len-1] = (rev_table[ord(data[i+2])]<<6) & 0xC0 | (rev_table[ord(data[i+3])]) & 0x3F
     elif remainder == 1:
         buffer[dec_len-1] = (rev_table[ord(data[i])]<<2) | (rev_table[ord(data[i+1])]>>4)
     elif remainder == 2:
