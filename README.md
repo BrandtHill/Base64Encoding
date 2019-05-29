@@ -11,10 +11,10 @@ The encode and decode functions divide the input and output data into chunks and
 
 | Language | Time (s)   | Comments                       |
 |----------|------------|--------------------------------|
-| C        | 1.078425   | Compiled with -O3              |
-| Java     | 3.173457   |                                |
-| C#       | 5.4726778  | Ran in Visual Studio (Release) |
-| Python   | 15.52048   | Ran with PyPy3                 |
-| Elixir   | 83.22      | Used Task.async_stream         |
-| Python   | 355.266237 | Ran with Python3 (standard)    |
+| C        | 1.078      | Compiled with -O3              |
+| Java     | 3.173      |                                |
+| C#       | 5.473      | Ran in Visual Studio (Release) |
+| Python   | 15.52      | Ran with PyPy3                 |
+| Elixir   | 54.76      | Used Task.async_stream         |
+| Python   | 355.3      | Ran with Python3 (standard)    |
 
