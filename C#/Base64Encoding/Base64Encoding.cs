@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.IO;
 
 namespace Base64Encoding
 {
@@ -28,30 +29,29 @@ namespace Base64Encoding
             Console.WriteLine(Encode("AAAAAAAAAAAA"));
             Console.WriteLine(Encode("AAAAAAAAAAAAA"));
             Console.WriteLine(Encode("AAAAAAAAAAAAAA"));
-            Console.WriteLine(Decode(Encode("123")));
-            Console.WriteLine(Decode(Encode("1234")));
-            Console.WriteLine(Decode(Encode("12345")));
-            Console.WriteLine(Decode(Encode("123456")));
-            Console.WriteLine(Decode("QUJDYWJjMTIzWFlaeHl6"));
-            Console.WriteLine(Decode(Encode("This is a string that will be encoded and then decoded.\n"
-                    + "If you can read this, my hand crafted algorithm is working swimmingly...\n"
-                    + "Now for some non-Base64 characters: ~~~```<<<()()()$$$$$^^^^^@@@@@()()()>>>```~~~")));
+            Console.WriteLine(Encoding.UTF8.GetString(Decode(Encode("123"))));
+            Console.WriteLine(Encoding.UTF8.GetString(Decode(Encode("1234"))));
+            Console.WriteLine(Encoding.UTF8.GetString(Decode(Encode("12345"))));
+            Console.WriteLine(Encoding.UTF8.GetString(Decode(Encode("123456"))));
+            Console.WriteLine(Encoding.UTF8.GetString(Decode("QUJDYWJjMTIzWFlaeHl6")));
 
             Stopwatch sw = new Stopwatch();
-            string largeTest = null;
+            byte[] largeTest = null;
             sw.Start();
             for(int i = 0; i < 1000000; i++)
             {
                 largeTest = Decode(Encode(largeData));
             }
             sw.Stop();
-            Console.Write(largeTest);
+            Console.Write(Encoding.UTF8.GetString(largeTest));
             Console.WriteLine("Total time in seconds: " + sw.Elapsed.TotalSeconds);
 
             Console.Read();
         }
 
-        public static string Encode(string data)
+        public static string Encode(string data) { return Encode(Encoding.UTF8.GetBytes(data)); }
+
+        public static string Encode(byte[] data)
         {
             int datLen = data.Length;
             int remainder = datLen % 3;
@@ -86,52 +86,41 @@ namespace Base64Encoding
             return buffer.ToString();
         }
 
-        public static string Decode(string data)
+        public static byte[] Decode(string data)
         {
             int encLen = data.Length;
-            int decLen;
-            int remainder;
-            char[] chunkIn = new char[4];
-            char[] chunkOut = new char[3];
+            int remainder = data[encLen - 1] == '=' ? (data[encLen - 2] == '=' ? 1 : 2) : 0;
+            int decLen = ((encLen * 3) / 4) - (remainder > 0 ? (remainder == 2 ? 1 : 2) : 0);
 
-            remainder = 0;
-            if (data[encLen - 1] == '=')
+            //Tried using MemoryStream (like Java ByteBuffer) but it was about 60% slower than byte array;
+            var buffer = new byte[decLen];
+
+            int i, j;
+            for (i = j = 0; i < (encLen - 4); i += 4, j += 3)
             {
-                remainder = 2;
-                if (data[encLen - 2] == '=')
-                {
-                    remainder = 1;
-                }
-            }
-            decLen = ((encLen * 3) / 4) - (remainder > 0 ? (remainder == 2 ? 1 : 2) : 0);
-
-            StringBuilder buffer = new StringBuilder(decLen);
-
-            for (int j = 0; j < (encLen - 4); j += 4)
-            {
-                buffer.Append((char)((revTable[data[j]] << 2) | (revTable[data[j + 1]] >> 4)));
-                buffer.Append((char)(0xF0 & (revTable[data[j + 1]] << 4) | 0x0F & (revTable[data[j + 2]] >> 2)));
-                buffer.Append((char)(0xC0 & (revTable[data[j + 2]] << 6) | 0x3F & (revTable[data[j + 3]])));
+                buffer[j] = ((byte)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
+                buffer[j + 1] = ((byte)(0xF0 & (revTable[data[i + 1]] << 4) | 0x0F & (revTable[data[i + 2]] >> 2)));
+                buffer[j + 2] = ((byte)(0xC0 & (revTable[data[i + 2]] << 6) | 0x3F & (revTable[data[i + 3]])));
             }
 
-            int i = encLen - 4;
+            i = encLen - 4;
             switch (remainder)
             {
                 case 0:
-                    buffer.Append((char)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
-                    buffer.Append((char)(0xF0 & (revTable[data[i + 1]] << 4) | 0x0F & (revTable[data[i + 2]] >> 2)));
-                    buffer.Append((char)(0xC0 & (revTable[data[i + 2]] << 6) | 0x3F & (revTable[data[i + 3]])));
+                    buffer[decLen - 3] = ((byte)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
+                    buffer[decLen - 2] = ((byte)(0xF0 & (revTable[data[i + 1]] << 4) | 0x0F & (revTable[data[i + 2]] >> 2)));
+                    buffer[decLen - 1] = ((byte)(0xC0 & (revTable[data[i + 2]] << 6) | 0x3F & (revTable[data[i + 3]])));
                     break;
                 case 1:
-                    buffer.Append((char)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
+                    buffer[decLen - 1] = ((byte)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
                     break;
                 case 2:
-                    buffer.Append((char)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
-                    buffer.Append((char)(0xF0 & (revTable[data[i + 1]] << 4) | 0x0F & (revTable[data[i + 2]] >> 2)));
+                    buffer[decLen - 2] = ((byte)((revTable[data[i]] << 2) | (revTable[data[i + 1]] >> 4)));
+                    buffer[decLen - 1] = ((byte)(0xF0 & (revTable[data[i + 1]] << 4) | 0x0F & (revTable[data[i + 2]] >> 2)));
                     break;
             }
 
-            return buffer.ToString();
+            return buffer;
         }
     }
 }
