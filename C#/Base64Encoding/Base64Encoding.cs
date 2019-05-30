@@ -75,9 +75,7 @@ namespace Base64Encoding
         {
             int encLen = data.Length;
             int remainder = data[encLen - 1] == '=' ? (data[encLen - 2] == '=' ? 1 : 2) : 0;
-            int decLen = ((encLen * 3) / 4) + ((remainder - 3) % 3);
-
-            int tmp = remainder + decLen;
+            int decLen = (encLen * 3) / 4 - (3 - remainder) % 3;
 
             //Tried using MemoryStream (like Java ByteBuffer) but it was about 60% slower than byte array;
             var buffer = new byte[decLen];

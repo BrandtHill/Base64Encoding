@@ -62,7 +62,7 @@ public class Base64Encoding {
 	public static byte[] decode(String data) {
 		int encLen = data.length();
 		int remainder = data.charAt(encLen - 1) == '=' ? (data.charAt(encLen - 2) == '=' ? 1 : 2) : 0;
-		int decLen = ((encLen * 3) / 4) + (remainder -3 ) % 3;
+		int decLen = (encLen * 3) / 4 - (3 - remainder) % 3;
 		int i;
 		ByteBuffer buffer = ByteBuffer.allocate(decLen);
 

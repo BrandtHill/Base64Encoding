@@ -4,6 +4,32 @@ const reverse = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
     0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,0,0,0,0,0,
     0,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,0,0,0,0,0];
 
+const big_string = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum mi purus,
+mollis et pulvinar quis, elementum non felis. Ut bibendum dolor ut mauris tempus, euismod
+ultricies odio vulputate. Nunc finibus elit non venenatis maximus. Maecenas in mollis ipsum,
+mattis laoreet purus. Sed lacus purus, tempus vel elementum sed, rutrum nec massa. Mauris
+mattis libero vitae nunc tempor, eget posuere ipsum molestie. Curabitur semper tempus diam.
+Morbi rutrum sollicitudin augue, rhoncus viverra velit volutpat vitae.\r\n`
+
+let benchmark = () => {
+    console.log(encode('AAAAAAAAAAAA'))
+    console.log(encode('AAAAAAAAAAAAA'))
+    console.log(encode('AAAAAAAAAAAAAA'))
+    console.log(decode(encode('123')).toString())
+    console.log(decode(encode('1234')).toString())
+    console.log(decode(encode('12345')).toString())
+    console.log(decode(encode('123456')).toString())
+    console.log(decode('QUJDYWJjMTIzWFlaeHl6').toString())
+
+    let big_res
+    let start = Date.now()
+    for (let i = 0; i < 1000000; i++) big_res = decode(encode(big_string))
+    let stop = Date.now()
+
+    console.log(big_res.toString())
+    console.log(`Completed in ${(stop - start) / 1000} seconds`)
+}
+
 const encode = (data) => {
     data = Buffer.from(data, 'utf8')
     let enc = ''
@@ -29,7 +55,7 @@ const encode = (data) => {
 const decode = (data) => {
     let encLen = data.length
     let rem = (data.slice(-2, encLen) == '==') ? 1 : (data.slice(-1, encLen) == '=' ? 2 : 0)
-    let decLen = (encLen * 0.75) + (rem - 3) % 3
+    let decLen = (encLen * 0.75) - (3 - rem) % 3
     let buf = Buffer.alloc(decLen)
     let chunk
     let i = 0
@@ -50,5 +76,4 @@ const decode = (data) => {
     return buf
 }
 
-console.log(encode(process.argv[2]))
-console.log(decode(encode(process.argv[2])).toString())
+benchmark()

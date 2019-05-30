@@ -58,7 +58,7 @@ char* encode(char* data) {
     char* buffer = calloc(encLen + 1, sizeof(char));
     int i,j;
     for (i = j = 0; i < (datLen - remainder); i += 3) {
-        buffer[j++]   = indexTable[  data[i]>>2 ];
+        buffer[j++] = indexTable[  data[i]>>2 ];
         buffer[j++] = indexTable[ (data[i]   & 0x03)<<4 | data[i+1]>>4 ];
         buffer[j++] = indexTable[ (data[i+1] & 0x0F)<<2 | data[i+2]>>6 ];
         buffer[j++] = indexTable[  data[i+2] & 0x3F ];
@@ -66,11 +66,11 @@ char* encode(char* data) {
     
     if (remainder) {
         strncpy(buffer + j + 2, "==", 2);
-        buffer[j] = indexTable[ data[i]>>2 ];
-        buffer[j+1] = indexTable[ (data[i] & 0x03)<<4 ];
+        buffer[j++] = indexTable[ data[i]>>2 ];
+        buffer[j] = indexTable[ (data[i] & 0x03)<<4 ];
         if (remainder == 2) {
-            buffer[j+1] = indexTable[ (data[i] & 0x03)<<4 | data[i+1]>>4 ];
-            buffer[j+2] = indexTable[ (data[i+1] & 0x0F)<<2 ];
+            buffer[j++] = indexTable[ (data[i] & 0x03)<<4 | data[i+1]>>4 ];
+            buffer[j++] = indexTable[ (data[i+1] & 0x0F)<<2 ];
         }
     }
     
@@ -80,7 +80,7 @@ char* encode(char* data) {
 char* decode(char* data) {
     int encLen = strlen(data);
     int remainder = data[encLen - 1] == '=' ? (data[encLen - 2] == '=' ? 1 : 2) : 0;
-    int decLen = ((encLen * 3) / 4) + (remainder - 3) % 3;
+    int decLen = (encLen * 3) / 4 - (3 - remainder) % 3;
     int i,j;
     char* buffer = calloc(decLen + 1, sizeof(char));
 
