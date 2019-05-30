@@ -26,13 +26,10 @@ public class Base64Encoding {
 		System.out.println(new String(decode(encode("123456"))));
 		System.out.println(new String(decode("QUJDYWJjMTIzWFlaeHl6")));
 		
-		long timeStart = System.nanoTime();
-		
 		byte[] largeTest = null;
-		for (int i = 0; i < 1000000; i++) {
-			largeTest = decode(encode(largeData));
-		} 
-		
+
+		long timeStart = System.nanoTime();
+		for (int i = 0; i < 1000000; i++) largeTest = decode(encode(largeData)); 
 		long timeEnd = System.nanoTime();
 		
 		System.out.println(new String(largeTest));
@@ -48,27 +45,16 @@ public class Base64Encoding {
 		int remainder = datLen % 3;
 		int encLen = (datLen / 3) * 4 + (remainder != 0 ? 4 : 0);
 		StringBuffer buffer = new StringBuffer(encLen);
-		
-		for (int i = 0; i < (datLen - remainder); i += 3) {
+		int i;
+		for (i = 0; i < (datLen - remainder); i += 3) {
 			buffer.append(indexTable[  data[i]>>>2 ]);
 			buffer.append(indexTable[ (data[i] & 0x03)<<4 | data[i+1]>>>4 ]);
 			buffer.append(indexTable[ (data[i+1] & 0x0F)<<2 | data[i+2]>>>6 ]);
 			buffer.append(indexTable[  data[i+2] & 0x3F ]);
 		}
-		
-		if (remainder > 0) {
-			int i = datLen - remainder;
-			buffer.append(indexTable[ data[i]>>>2 ]);
-			if (remainder == 1) {
-				buffer.append(indexTable[ (data[i] & 0x03)<<4 ]);
-				buffer.append("==");
-			}
-			else if (remainder == 2) {
-				buffer.append(indexTable[ (data[i] & 0x03)<<4 | data[i+1]>>>4 ]);
-				buffer.append(indexTable[ (data[i+1] & 0x0F)<<2 ]);
-				buffer.append('=');
-			}
-		}
+
+		if (remainder == 1) buffer.append(new char[] { indexTable[ data[i]>>>2 ], indexTable[ (data[i] & 0x03)<<4 ], '=', '=' });
+		if (remainder == 2) buffer.append(new char[] { indexTable[ data[i]>>>2 ], indexTable[ (data[i] & 0x03)<<4 | data[i+1]>>>4 ], indexTable[ (data[i+1] & 0x0F)<<2 ], '='});
 
 		return buffer.toString();
 	}
@@ -76,32 +62,21 @@ public class Base64Encoding {
 	public static byte[] decode(String data) {
 		int encLen = data.length();
 		int remainder = data.charAt(encLen - 1) == '=' ? (data.charAt(encLen - 2) == '=' ? 1 : 2) : 0;
-		int decLen = ((encLen * 3) / 4) - (remainder > 0 ? (remainder == 2 ? 1 : 2) : 0);
-		
+		int decLen = (encLen * 3) / 4 - (3 - remainder) % 3;
+		int i;
 		ByteBuffer buffer = ByteBuffer.allocate(decLen);
-		
-		for (int i = 0; i < (encLen - 4); i += 4) {
+
+		for (i = 0; i < (encLen - 4); i += 4) {
 			buffer.put((byte)((revTable[data.charAt(i)]<<2) | (revTable[data.charAt(i+1)]>>>4)));
 			buffer.put((byte)(0xF0 & (revTable[data.charAt(i+1)]<<4) | 0x0F & (revTable[data.charAt(i+2)]>>>2)));
 			buffer.put((byte)(0xC0 & (revTable[data.charAt(i+2)]<<6) | 0x3F & (revTable[data.charAt(i+3)])));
 		}
-		
-		int i = encLen - 4;
-		switch (remainder) {
-		case 0: 
-			buffer.put((byte)((revTable[data.charAt(i)]<<2) | (revTable[data.charAt(i+1)]>>>4)));
-			buffer.put((byte)(0xF0 & (revTable[data.charAt(i+1)]<<4) | 0x0F & (revTable[data.charAt(i+2)]>>>2)));
-			buffer.put((byte)(0xC0 & (revTable[data.charAt(i+2)]<<6) | 0x3F & (revTable[data.charAt(i+3)])));
-			break;
-		case 1:
-			buffer.put((byte)((revTable[data.charAt(i)]<<2) | (revTable[data.charAt(i+1)]>>>4)));
-			break;
-		case 2:
-			buffer.put((byte)((revTable[data.charAt(i)]<<2) | (revTable[data.charAt(i+1)]>>>4)));
-			buffer.put((byte)(0xF0 & (revTable[data.charAt(i+1)]<<4) | 0x0F & (revTable[data.charAt(i+2)]>>>2)));
-			break;
-		}
-		
+		 
+		buffer.put((byte)((revTable[data.charAt(i)]<<2) | (revTable[data.charAt(i+1)]>>>4)));
+		if (remainder == 1) return buffer.array();
+		buffer.put((byte)(0xF0 & (revTable[data.charAt(i+1)]<<4) | 0x0F & (revTable[data.charAt(i+2)]>>>2)));
+		if (remainder == 2) return buffer.array();
+		buffer.put((byte)(0xC0 & (revTable[data.charAt(i+2)]<<6) | 0x3F & (revTable[data.charAt(i+3)])));
 		return buffer.array();
 	}
 

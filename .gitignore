@@ -1,8 +1,9 @@
 *.exe
 .vscode/
 .gitattributes
-.core
-.class
+*.core
+*.class
+C/[Bb]64
 
 # ---------
  
