@@ -3,6 +3,7 @@
 .gitattributes
 *.core
 *.class
+C/[Bb]64
 
 # ---------
  
