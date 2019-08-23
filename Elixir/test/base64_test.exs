@@ -67,4 +67,18 @@ Morbi rutrum sollicitudin augue, rhoncus viverra velit volutpat vitae.
     IO.puts("10K Enc & Dec Async completed in #{(t1 - t0)/1_000} seconds")
   end
 
+  test "Built In 1M Enc/Dec Async" do
+    t0 = System.system_time(:millisecond)
+    Task.async_stream(1..1_00_000, fn _x -> @big_string |> Base.encode64 |> Base.decode64 end) |> Enum.to_list
+    t1 = System.system_time(:millisecond)
+    IO.puts("<Builtin> 1M Enc & Dec Async completed in #{(t1 - t0)/1_000} seconds")
+  end
+
+  test "Built In 1M Enc/Dec Sync" do
+    t0 = System.system_time(:millisecond)
+    Enum.each(1..1_00_000, fn _x -> @big_string |> Base.encode64 |> Base.decode64 end)
+    t1 = System.system_time(:millisecond)
+    IO.puts("<Builtin> 1M Enc & Dec Sync completed in #{(t1 - t0)/1_000} seconds")
+  end
+
 end

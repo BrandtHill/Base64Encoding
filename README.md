@@ -11,7 +11,8 @@ The encode and decode functions divide the input and output data into chunks and
 | Language   | Time (s) | Comments                       | Encoding Struct  | Decoding Struct   |
 |------------|----------|--------------------------------|------------------|-------------------|
 | C          | 1.078    | Compiled with gcc -O3          | char *           | char *            |
-| Java       | 3.173    |                                | StringBuffer     | ByteBuffer        |
+| Java       | 3.173    | Ran in Eclipse, Java 8         | StringBuffer     | ByteBuffer        |
+| Go         | 3.374    | Go version go1.12.9            | strings.Builder  | bytes.Buffer      |
 | C#         | 4.585    | Ran in VS 2015, .NET 4.6       | StringBuilder    | byte[]            |
 | Nim        | 5.264    | Compiled with nim c -d:release | string           | string            |
 | Python     | 15.52    | Ran with PyPy3 (JIT)           | List<chr>        | bytearray         |
