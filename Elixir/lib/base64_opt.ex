@@ -1,18 +1,16 @@
-defmodule Base64 do
+defmodule Base64Opt do
   @moduledoc """
   Brandt's Base64 Encoding implementation in Elixir
   """
 
   use Bitwise, only_operators: true
 
+  @table 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+
   def encode(data), do: encode(<<>>, data)
   defp encode(h, <<>>), do: h
   defp encode(h, <<a::8>>), do: h <> indx(a >>> 2) <> indx((a &&& 0x03) <<< 4) <> "=="
-
-  defp encode(h, <<a::8, b::8>>),
-    do:
-      h <>
-        indx(a >>> 2) <> indx((a &&& 0x03) <<< 4 ||| b >>> 4) <> indx((b &&& 0x0F) <<< 2) <> "="
+  defp encode(h, <<a::8, b::8>>), do: h <> indx(a >>> 2) <> indx((a &&& 0x03) <<< 4 ||| b >>> 4) <> indx((b &&& 0x0F) <<< 2) <> "="
 
   defp encode(h, <<a::8, b::8, c::8, t::binary>>) do
     (h <>
@@ -41,29 +39,8 @@ defmodule Base64 do
     |> decode(t)
   end
 
-  defp indx(i) do
-    cond do
-      # A-Z
-      i < 26 -> <<i + 65>>
-      # a-z
-      i < 52 -> <<i + 71>>
-      # 0-9
-      i < 62 -> <<i - 04>>
-      i == 62 -> "+"
-      i == 63 -> "/"
-    end
-  end
-
-  defp rev(i) do
-    cond do
-      # A-Z
-      i > 96 -> i - 71
-      # a-z
-      i > 64 -> i - 65
-      # 0-9
-      i > 47 -> i + 04
-      i == ?/ -> 63
-      i == ?+ -> 62
-    end
+  for {val, i} <- Enum.with_index(@table) do
+    def indx(unquote(i)), do: <<unquote(val)>>
+    def rev(unquote(val)), do: unquote(i)
   end
 end

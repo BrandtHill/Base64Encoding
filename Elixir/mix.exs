@@ -12,8 +12,8 @@ defmodule Base64.MixProject do
   end
 
   # Run "mix help compile.app" to learn about applications.
-  def application, do: [ extra_applications: [:logger] ]
+  def application, do: [extra_applications: [:logger]]
 
   # Run "mix help deps" to learn about dependencies.
-  defp deps, do: [ ]
+  defp deps, do: []
 end

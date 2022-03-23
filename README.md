@@ -18,6 +18,6 @@ The encode and decode functions divide the input and output data into chunks and
 | Python     | 15.52    | Ran with PyPy3 (JIT)           | List<chr>        | bytearray         |
 | Crystal    | 20.28    | Compiled with crystal build --release | String    | UInt8[]           |
 | Javascript | 22.04    | Ran with Node.js v10           | String           | Buffer            |
-| Elixir     | 53.00    | Used Task.async_stream         | bitstring        | bitstring         |
+| Elixir     | 28.60    | Used Task.async_stream         | bitstring        | bitstring         |
 | Python     | 355.3    | Ran with Python3 (standard)    | List<chr>        | bytearray         |
 
