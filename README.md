@@ -15,9 +15,9 @@ The encode and decode functions divide the input and output data into chunks and
 | Go         | 3.374    | Go version go1.12.9            | strings.Builder  | bytes.Buffer      |
 | C#         | 4.585    | Ran in VS 2015, .NET 4.6       | StringBuilder    | byte[]            |
 | Nim        | 5.264    | Compiled with nim c -d:release | string           | string            |
-| Python     | 15.52    | Ran with PyPy3 (JIT)           | List<chr>        | bytearray         |
+| Python PyPy| 15.52    | Ran with PyPy3 (JIT)           | List<chr>        | bytearray         |
 | Crystal    | 20.28    | Compiled with crystal build --release | String    | UInt8[]           |
 | Javascript | 22.04    | Ran with Node.js v10           | String           | Buffer            |
-| Elixir     | 28.60    | Used Task.async_stream         | bitstring        | bitstring         |
+| Elixir     | 17.55    | Elixir 1.19.5 / OTP 28         | binary           | binary            |
 | Python     | 355.3    | Ran with Python3 (standard)    | List<chr>        | bytearray         |
 

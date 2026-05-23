@@ -3,14 +3,24 @@ defmodule Base64Opt do
   Brandt's Base64 Encoding implementation in Elixir
   """
 
-  use Bitwise, only_operators: true
+  import Bitwise
 
-  @table 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+  @table_charlist ~c"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+  @index_table @table_charlist
+               |> Enum.map(&<<&1>>)
+               |> List.to_tuple()
+
+  @rev_table @table_charlist
+             |> Enum.with_index()
+             |> Enum.reduce(Tuple.duplicate(:whoops, 128), fn {char, index}, tup ->
+               put_elem(tup, char, index)
+             end)
+
+  def indx(i), do: elem(@index_table, i)
+  def rev(c), do: elem(@rev_table, c)
 
   def encode(data), do: encode(<<>>, data)
-  defp encode(h, <<>>), do: h
-  defp encode(h, <<a::8>>), do: h <> indx(a >>> 2) <> indx((a &&& 0x03) <<< 4) <> "=="
-  defp encode(h, <<a::8, b::8>>), do: h <> indx(a >>> 2) <> indx((a &&& 0x03) <<< 4 ||| b >>> 4) <> indx((b &&& 0x0F) <<< 2) <> "="
 
   defp encode(h, <<a::8, b::8, c::8, t::binary>>) do
     (h <>
@@ -21,15 +31,17 @@ defmodule Base64Opt do
     |> encode(t)
   end
 
-  def decode(data), do: decode(<<>>, data)
-  defp decode(h, <<>>), do: h
-  defp decode(h, <<a, b, ?=, ?=>>), do: h <> <<rev(a) <<< 2 ||| rev(b) >>> 4>>
+  defp encode(h, <<>>), do: h
+  defp encode(h, <<a::8>>), do: h <> indx(a >>> 2) <> indx((a &&& 0x03) <<< 4) <> "=="
 
-  defp decode(h, <<a, b, c, ?=>>),
+  defp encode(h, <<a::8, b::8>>),
     do:
-      h <> <<rev(a) <<< 2 ||| rev(b) >>> 4, (rev(b) <<< 4 &&& 0xF0) ||| (rev(c) >>> 2 &&& 0x0F)>>
+      h <>
+        indx(a >>> 2) <> indx((a &&& 0x03) <<< 4 ||| b >>> 4) <> indx((b &&& 0x0F) <<< 2) <> "="
 
-  defp decode(h, <<a, b, c, d, t::binary>>) do
+  def decode(data), do: decode(<<>>, data)
+
+  defp decode(h, <<a, b, c, d, t::binary>>) when c != ?= and d != ?= do
     (h <>
        <<
          rev(a) <<< 2 ||| rev(b) >>> 4,
@@ -39,8 +51,10 @@ defmodule Base64Opt do
     |> decode(t)
   end
 
-  for {val, i} <- Enum.with_index(@table) do
-    def indx(unquote(i)), do: <<unquote(val)>>
-    def rev(unquote(val)), do: unquote(i)
-  end
+  defp decode(h, <<>>), do: h
+  defp decode(h, <<a, b, ?=, ?=>>), do: h <> <<rev(a) <<< 2 ||| rev(b) >>> 4>>
+
+  defp decode(h, <<a, b, c, ?=>>),
+    do:
+      h <> <<rev(a) <<< 2 ||| rev(b) >>> 4, (rev(b) <<< 4 &&& 0xF0) ||| (rev(c) >>> 2 &&& 0x0F)>>
 end

@@ -25,39 +25,38 @@ defmodule Base64Test do
   Morbi rutrum sollicitudin augue, rhoncus viverra velit volutpat vitae.
   """
 
-  def time_test(func, msg) do
+  def time_test(func, n, msg) do
     t0 = System.system_time(:millisecond)
-    func.()
+    Enum.each(1..n, func)
     t1 = System.system_time(:millisecond)
     IO.puts("<#{msg}> completed in #{(t1 - t0) / 1_000} seconds")
   end
 
-  test "Benchmark 10K Encode Sync" do
-    IO.puts "10K Enc Sync -----------------------"
-    fn -> Enum.each(1..10_000, fn _ -> @big_string |> Base64.encode() end) end |> time_test("Naive 10K Enc Sync")
-    fn -> Enum.each(1..10_000, fn _ -> @big_string |> Base64Opt.encode() end) end |> time_test("Opt 10K Enc Sync")
-    fn -> Enum.each(1..10_000, fn _ -> @big_string |> Base.encode64() end) end |> time_test("Builtin 10K Enc Sync")
+  test "Benchmark 10K Encode" do
+    IO.puts("10K Enc Sync -----------------------")
+    fn _ -> Base64.encode(@big_string) end |> time_test(10_000, "Naive 10K Enc Sync")
+    fn _ -> Base64Opt.encode(@big_string) end |> time_test(10_000, "Opt 10K Enc Sync")
+    fn _ -> Base.encode64(@big_string) end |> time_test(10_000, "Builtin 10K Enc Sync")
   end
 
-  test "Benchmark 10K Decode Sync" do
+  test "Benchmark 10K Decode" do
     encoded = @big_string |> Base64.encode()
-    IO.puts "10K Dec Sync -----------------------"
-    fn -> Enum.each(1..10_000, fn _ -> encoded |> Base64.decode() end) end |> time_test("Naive 10K Dec Sync")
-    fn -> Enum.each(1..10_000, fn _ -> encoded |> Base64Opt.decode() end) end |> time_test("Opt 10K Dec Sync")
-    fn -> Enum.each(1..10_000, fn _ -> encoded |> Base.decode64() end) end |> time_test("Builtin 10K Dec Sync")
+    IO.puts("10K Dec Sync -----------------------")
+    fn _ -> Base64.decode(encoded) end |> time_test(10_000, "Naive 10K Dec Sync")
+    fn _ -> Base64Opt.decode(encoded) end |> time_test(10_000, "Opt 10K Dec Sync")
+    fn _ -> Base.decode64(encoded) end |> time_test(10_000, "Builtin 10K Dec Sync")
   end
 
-  test "Benchmark 10K Enc/Dec Sync" do
-    IO.puts "10K EncDec Sync -----------------------"
-    fn -> Enum.each(1..10_000, fn _ -> @big_string |> Base64.encode() |> Base64.decode() end) end |> time_test("Naive 10K EncDec Sync")
-    fn -> Enum.each(1..10_000, fn _ -> @big_string |> Base64Opt.encode() |> Base64Opt.decode() end) end |> time_test("Opt 10K EncDec Sync")
-    fn -> Enum.each(1..10_000, fn _ -> @big_string |> Base.encode64() |> Base.decode64() end) end |> time_test("Builtin 10K EncDec Sync")
-  end
+  test "Benchmark 100K Encode + Decode" do
+    IO.puts("100K EncDec Sync -----------------------")
 
-  test "Benchmark 10K Enc/Dec Async" do
-    IO.puts "10K EncDec Async -----------------------"
-    fn -> Task.async_stream(1..10_000, fn _ -> @big_string |> Base64.encode() |> Base64.decode() end) |> Enum.to_list() end |> time_test("Naive 10K EncDec Async")
-    fn -> Task.async_stream(1..10_000, fn _ -> @big_string |> Base64Opt.encode() |> Base64Opt.decode() end) |> Enum.to_list() end |> time_test("Opt 10K EncDec Async")
-    fn -> Task.async_stream(1..10_000, fn _ -> @big_string |> Base.encode64() |> Base.decode64() end) |> Enum.to_list() end |> time_test("Builtin 10K EncDec Async")
+    fn _ -> @big_string |> Base64.encode() |> Base64.decode() end
+    |> time_test(100_000, "Naive 100K EncDec Sync")
+
+    fn _ -> @big_string |> Base64Opt.encode() |> Base64Opt.decode() end
+    |> time_test(100_000, "Opt 100K EncDec Sync")
+
+    fn _ -> @big_string |> Base.encode64() |> Base.decode64() end
+    |> time_test(100_000, "Builtin 100K EncDec Sync")
   end
 end

@@ -3,7 +3,7 @@ defmodule Base64 do
   Brandt's Base64 Encoding implementation in Elixir
   """
 
-  use Bitwise, only_operators: true
+  import Bitwise
 
   def encode(data), do: encode(<<>>, data)
   defp encode(h, <<>>), do: h
